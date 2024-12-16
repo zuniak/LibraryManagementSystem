@@ -1,17 +1,23 @@
 package org.library.library_app.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.library.library_app.tools.BookCategory;
+import org.library.library_app.tools.BookStatus;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 @Entity
 @NoArgsConstructor
 @Getter
+@Setter
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,10 +25,33 @@ public class Book {
 
     @NotBlank
     private String title;
-    private String author;
 
-    public Book(String title, String author) {
+    @ManyToMany(mappedBy = "books", fetch = FetchType.LAZY)
+    @NotEmpty
+    private List<Author> authors;
+
+    @NotNull
+    private BookCategory category;
+
+    @NotBlank
+    private String description;
+
+    @NotNull
+    private BookStatus status;
+
+    public void addAuthor(Author author) {
+        authors.add(author);
+    }
+
+    public void removeAuthor(Author author) {
+        authors.remove(author);
+    }
+
+    public Book(String title, BookCategory category, String description) {
         this.title = title;
-        this.author = author;
+        this.authors = new LinkedList<>();
+        this.category = category;
+        this.description = description;
+        this.status = BookStatus.AVAILABLE;
     }
 }
