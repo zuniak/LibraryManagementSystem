@@ -1,10 +1,12 @@
 package org.library.library_app.controller;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import lombok.AllArgsConstructor;
 import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
+import org.library.library_app.exceptions.AuthorValidationException;
 import org.library.library_app.service.AuthorService;
 import org.library.library_app.validationgroups.CreateAuthor;
 import org.library.library_app.validationgroups.UpdateAuthor;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/authors")
@@ -25,8 +28,9 @@ public class AuthorController {
 
     @PostMapping("/new")
     public ResponseEntity<AuthorDto> addAuthor(@RequestBody @Valid AuthorDto author) {
-        if (!validator.validate(author, CreateAuthor.class).isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        Set<ConstraintViolation<AuthorDto>> violations = validator.validate(author, CreateAuthor.class);
+        if (!violations.isEmpty()) {
+            throw new AuthorValidationException("Author create validation failed", violations);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(service.addAuthor(author));
     }
@@ -51,40 +55,26 @@ public class AuthorController {
 
     @GetMapping("{id}/books")
     public ResponseEntity<List<BookDto>> getAuthorBooks(@PathVariable Long id) {
-        try {
-            List<BookDto> authorsBooks = service.getAuthorBooksDto(id);
-            if (authorsBooks.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(authorsBooks);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+        List<BookDto> authorsBooks = service.getAuthorBooksDto(id);
+        if (authorsBooks.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(authorsBooks);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
-        try {
-            if (service.deleteAuthor(id)) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.badRequest().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        service.deleteAuthor(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateAuthor(@PathVariable Long id, @RequestBody @Valid AuthorDto author) {
-        validator.validate(author, UpdateAuthor.class);
-
-        try {
-            if (service.updateAuthor(id, author)) {
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.badRequest().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+        Set<ConstraintViolation<AuthorDto>> violations = validator.validate(author, UpdateAuthor.class);
+        if (!violations.isEmpty()) {
+            throw new AuthorValidationException("Author update validation failed", violations);
         }
+        service.updateAuthor(id, author);
+        return ResponseEntity.ok().build();
     }
 }

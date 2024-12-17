@@ -14,17 +14,18 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 public class AuthorDto {
-    @Null(groups = CreateAuthor.class)
-    @NotNull(groups = UpdateAuthor.class)
+
+    @Null(groups = CreateAuthor.class, message = "ID must be null when creating a new author.")
+    @NotNull(groups = UpdateAuthor.class, message = "ID is required when updating an author.")
     private Long id;
 
-    @NotBlank(groups = {CreateAuthor.class, UpdateAuthor.class})
+    @NotBlank(groups = {CreateAuthor.class, UpdateAuthor.class}, message = "First name cannot be blank.")
     private String firstName;
 
-    @NotBlank(groups = {CreateAuthor.class, UpdateAuthor.class})
+    @NotBlank(groups = {CreateAuthor.class, UpdateAuthor.class}, message = "Last name cannot be blank.")
     private String lastName;
 
-    @Null(groups = {CreateAuthor.class})
-    @NotNull(groups = {UpdateAuthor.class})
+    @Null(groups = CreateAuthor.class, message = "Books IDs must be null when creating a new author.")
+    @NotNull(groups = UpdateAuthor.class, message = "Books IDs cannot be null when updating an author.")
     private Set<Long> booksIds;
 }

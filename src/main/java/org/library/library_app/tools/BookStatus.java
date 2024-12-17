@@ -1,5 +1,7 @@
 package org.library.library_app.tools;
 
+import org.library.library_app.exceptions.UnknownBookStatusException;
+
 public enum BookStatus {
     AVAILABLE,
     RESERVED,
@@ -18,6 +20,6 @@ public enum BookStatus {
                 return bookStatus;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + status);
+        throw new UnknownBookStatusException("Unknown status: " + status);
     }
 }

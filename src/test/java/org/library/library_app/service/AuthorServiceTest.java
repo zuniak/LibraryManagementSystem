@@ -7,6 +7,8 @@ import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
+import org.library.library_app.exceptions.AuthorNotFoundException;
+import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
 import org.library.library_app.tools.BookCategory;
@@ -139,10 +141,10 @@ class AuthorServiceTest {
     }
 
     @Test
-    void getAuthorsBooksDto_WhenAuthorNotFound_ShouldThrowIllegalArgumentException() {
+    void getAuthorsBooksDto_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> service.getAuthorBooksDto(1L));
 
         assertEquals("Author with id 1 not found", exception.getMessage());
@@ -157,19 +159,17 @@ class AuthorServiceTest {
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
 
-        boolean result = service.deleteAuthor(1L);
-
-        assertTrue(result);
+        service.deleteAuthor(1L);
 
         verify(authorRepository, times(1)).deleteById(anyLong());
         verify(authorRepository, times(1)).findById(anyLong());
     }
 
     @Test
-    void deleteAuthor_WhenAuthorNotFound_ShouldThrowIllegalArgumentException() {
+    void deleteAuthor_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> service.deleteAuthor(1L));
 
         assertEquals("Author with id 1 not found", exception.getMessage());
@@ -179,11 +179,12 @@ class AuthorServiceTest {
     }
 
     @Test
-    void updateAuthor_WhenAuthorNotFound_ShouldThrowIllegalArgumentException() {
+    void updateAuthor_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
+        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", null);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> service.updateAuthor(1L, new AuthorDto(1L, "First Name", "Last Name", null)));
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
+                () -> service.updateAuthor(1L, updatedAuthor));
 
         assertEquals("Author with id 1 not found", exception.getMessage());
 
@@ -192,7 +193,7 @@ class AuthorServiceTest {
     }
 
     @Test
-    void updateAuthor_WhenAuthorFoundButNewBookNotFound_ShouldThrowIllegalArgumentException() {
+    void updateAuthor_WhenAuthorFoundButNewBookNotFound_ShouldThrowBookNotFoundException() {
         Author author = new Author("First Name", "Last Name");
         author.setId(1L);
 
@@ -201,7 +202,7 @@ class AuthorServiceTest {
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> service.updateAuthor(1L, updatedAuthor));
 
         assertEquals("Book with id 1 not found", exception.getMessage());
@@ -237,15 +238,13 @@ class AuthorServiceTest {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
         when(bookRepository.findById(3L)).thenReturn(Optional.of(book3));
 
-        boolean result = service.updateAuthor(1L, updatedAuthor);
+        service.updateAuthor(1L, updatedAuthor);
 
-        assertTrue(result);
         assertEquals(Set.of(book2, book3), author.getBooks());
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(2)).findById(anyLong());
         verify(bookRepository, times(1)).deleteById(anyLong());
-        verify(bookRepository, times(1)).save(any(Book.class));
         verify(authorRepository, times(1)).save(any(Author.class));
     }
 }

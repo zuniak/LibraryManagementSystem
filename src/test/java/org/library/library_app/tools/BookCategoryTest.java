@@ -1,6 +1,7 @@
 package org.library.library_app.tools;
 
 import org.junit.jupiter.api.Test;
+import org.library.library_app.exceptions.UnknownBookCategoryException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,8 +15,8 @@ class BookCategoryTest {
     }
 
     @Test
-    void fromString_InvalidRequest_ShouldThrowIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> BookCategory.fromString("xxxxx"));
+    void fromString_InvalidRequest_ShouldThrowUnknownBookStatusException() {
+        assertThrows(UnknownBookCategoryException.class, () -> BookCategory.fromString("xxxxx"));
     }
 
     @Test

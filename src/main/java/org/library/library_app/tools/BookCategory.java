@@ -1,5 +1,7 @@
 package org.library.library_app.tools;
 
+import org.library.library_app.exceptions.UnknownBookCategoryException;
+
 public enum BookCategory {
     FICTION,
     SCIENCE,
@@ -13,7 +15,7 @@ public enum BookCategory {
                 return bookCategory;
             }
         }
-        throw new IllegalArgumentException("Unknown category: " + category);
+        throw new UnknownBookCategoryException("Unknown category: " + category);
     }
 
     @Override

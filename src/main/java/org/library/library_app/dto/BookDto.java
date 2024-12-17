@@ -14,22 +14,23 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class BookDto {
-    @Null(groups = CreateBook.class)
-    @NotNull(groups = UpdateBook.class)
+
+    @Null(groups = CreateBook.class, message = "ID must be null when creating a new book.")
+    @NotNull(groups = UpdateBook.class, message = "ID is required when updating a book.")
     private Long id;
 
-    @NotBlank(groups = {CreateBook.class, UpdateBook.class})
+    @NotBlank(groups = {CreateBook.class, UpdateBook.class}, message = "Title cannot be blank.")
     private String title;
 
-    @NotEmpty(groups = {CreateBook.class, UpdateBook.class})
+    @NotEmpty(groups = {CreateBook.class, UpdateBook.class}, message = "Authors list cannot be empty.")
     private List<Long> authorsIds;
 
-    @NotNull(groups = {CreateBook.class, UpdateBook.class})
+    @NotNull(groups = {CreateBook.class, UpdateBook.class}, message = "Category cannot be null.")
     private String category;
 
-    @NotBlank(groups = {CreateBook.class, UpdateBook.class})
+    @NotBlank(groups = {CreateBook.class, UpdateBook.class}, message = "Description cannot be blank.")
     private String description;
 
-    @NotNull(groups = {UpdateBook.class})
+    @NotNull(groups = {UpdateBook.class}, message = "Status is required when updating a book.")
     private String status;
 }

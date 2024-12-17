@@ -5,6 +5,8 @@ import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
+import org.library.library_app.exceptions.AuthorNotFoundException;
+import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
 import org.library.library_app.tools.DtoMapper;
@@ -46,19 +48,19 @@ public class AuthorService {
                     .map(DtoMapper::bookToDto)
                     .collect(Collectors.toList());
         }
-        throw new IllegalArgumentException("Author with id " + authorId + " not found");
+        throw new AuthorNotFoundException("Author with id " + authorId + " not found");
     }
 
 
-    public boolean deleteAuthor(Long id) {
+    public void deleteAuthor(Long id) {
         if (authorRepository.findById(id).isPresent()) {
             authorRepository.deleteById(id);
-            return true;
+        } else {
+            throw new AuthorNotFoundException("Author with id " + id + " not found");
         }
-        throw new IllegalArgumentException("Author with id " + id + " not found");
     }
 
-    public boolean updateAuthor(Long id, AuthorDto updatedAuthor) {
+    public void updateAuthor(Long id, AuthorDto updatedAuthor) {
         Optional<Author> authorOpt = authorRepository.findById(id);
         if (authorOpt.isPresent()) {
             Author author = authorOpt.get();
@@ -66,9 +68,9 @@ public class AuthorService {
             author.setLastName(updatedAuthor.getLastName());
             updateAuthorBooks(author, updatedAuthor.getBooksIds());
             authorRepository.save(author);
-            return true;
+        } else {
+            throw new AuthorNotFoundException("Author with id " + id + " not found");
         }
-        throw new IllegalArgumentException("Author with id " + id + " not found");
     }
 
     private void updateAuthorBooks(Author author, Set<Long> booksIds) {
@@ -93,8 +95,6 @@ public class AuthorService {
                 book.removeAuthor(author);
                 if (book.getAuthors().isEmpty()) {
                     bookRepository.deleteById(bookId);
-                } else {
-                    bookRepository.save(book);
                 }
             }
         }
@@ -105,9 +105,8 @@ public class AuthorService {
                 Book book = bookOpt.get();
                 author.addBook(book);
                 book.addAuthor(author);
-                bookRepository.save(book);
             } else {
-                throw new IllegalArgumentException("Book with id " + bookId + " not found");
+                throw new BookNotFoundException("Book with id " + bookId + " not found");
             }
         }
     }

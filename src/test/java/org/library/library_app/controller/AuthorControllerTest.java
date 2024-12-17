@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
+import org.library.library_app.exceptions.AuthorNotFoundException;
+import org.library.library_app.exceptions.AuthorValidationException;
 import org.library.library_app.service.AuthorService;
 import org.library.library_app.validationgroups.CreateAuthor;
 import org.library.library_app.validationgroups.UpdateAuthor;
@@ -18,8 +20,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -56,12 +60,15 @@ class AuthorControllerTest {
     }
 
     @Test
-    void addAuthor_WhenInvalidRequest_ShouldReturnBadRequest() {
+    void addAuthor_WhenInvalidRequest_ShouldThrowAuthorValidationException() {
         AuthorDto author = new AuthorDto(null, "", "", null);
 
-        ResponseEntity<AuthorDto> response = controller.addAuthor(author);
+        when(validator.validate(author, CreateAuthor.class)).thenThrow(new AuthorValidationException("Author create validation failed"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        AuthorValidationException exception = assertThrows(AuthorValidationException.class,
+                () -> controller.addAuthor(author));
+
+        assertEquals("Author create validation failed", exception.getMessage());
 
         verify(validator, times(1)).validate(author, CreateAuthor.class);
         verify(service, never()).addAuthor(author);
@@ -141,21 +148,19 @@ class AuthorControllerTest {
     }
 
     @Test
-    void getAuthorBooks_WhenAuthorNotFound_ShouldReturnBadRequest() {
-        when(service.getAuthorBooksDto(1L)).thenThrow(new IllegalArgumentException());
+    void getAuthorBooks_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
+        when(service.getAuthorBooksDto(1L)).thenThrow(new AuthorNotFoundException("Author with id 1 not found"));
 
-        ResponseEntity<List<BookDto>> response = controller.getAuthorBooks(1L);
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
+                () -> controller.getAuthorBooks(1L));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Author with id 1 not found", exception.getMessage());
 
         verify(service, times(1)).getAuthorBooksDto(anyLong());
-
     }
 
     @Test
     void deleteAuthor_WhenAuthorFound_ShouldReturnNoContent(){
-        when(service.deleteAuthor(1L)).thenReturn(true);
-
         ResponseEntity<Void> response = controller.deleteAuthor(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -164,52 +169,55 @@ class AuthorControllerTest {
     }
 
     @Test
-    void deleteAuthor_WhenAuthorNotFound_ShouldReturnBadRequest(){
-        when(service.deleteAuthor(1L)).thenThrow(new IllegalArgumentException());
+    void deleteAuthor_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException(){
+        doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).deleteAuthor(1L);
 
-        ResponseEntity<Void> response = controller.deleteAuthor(1L);
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
+                () -> controller.deleteAuthor(1L));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Author with id 1 not found", exception.getMessage());
 
         verify(service, times(1)).deleteAuthor(1L);
     }
 
     @Test
     void updateAuthor_WhenValidRequestAuthorFound_ShouldReturnOk(){
-        AuthorDto authorDto = new AuthorDto(1L, "First Name", "Last Name", null);
+        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", Set.of());
 
-        when(service.updateAuthor(1L, authorDto)).thenReturn(true);
-
-        ResponseEntity<Void> response = controller.updateAuthor(1L, authorDto);
+        ResponseEntity<Void> response = controller.updateAuthor(1L, updatedAuthor);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        verify(validator, times(1)).validate(authorDto, UpdateAuthor.class);
+        verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
         verify(service, times(1)).updateAuthor(anyLong(), any(AuthorDto.class));
     }
 
     @Test
-    void updateAuthor_WhenInvalidRequest_ShouldReturnBadRequest(){
-        AuthorDto authorDto = new AuthorDto(null, "", "", null);
+    void updateAuthor_WhenInvalidRequest_ShouldThrowAuthorValidationException(){
+        AuthorDto author = new AuthorDto(null, "", "", null);
 
-        ResponseEntity<Void> response = controller.updateAuthor(1L, authorDto);
+        when(validator.validate(author, UpdateAuthor.class)).thenThrow(new AuthorValidationException("Author update validation failed"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        AuthorValidationException exception = assertThrows(AuthorValidationException.class,
+                () -> controller.updateAuthor(1L, author));
 
-        verify(validator, times(1)).validate(authorDto, UpdateAuthor.class);
+        assertEquals("Author update validation failed", exception.getMessage());
+
+        verify(validator, times(1)).validate(author, UpdateAuthor.class);
     }
 
     @Test
-    void updateAuthor_WhenValidRequestAuthorNotFound_ShouldReturnBadRequest(){
-        AuthorDto author = new AuthorDto(1L, "First Name", "Last Name", null);
+    void updateAuthor_WhenValidRequestAuthorNotFound_ShouldThrowAuthorNotFoundException(){
+        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", Set.of());
 
-        when(service.updateAuthor(1L, author)).thenThrow(new IllegalArgumentException());
+        doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).updateAuthor(1L, updatedAuthor);
 
-        ResponseEntity<Void> response = controller.updateAuthor(1L, author);
+        AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
+                () -> controller.updateAuthor(1L, updatedAuthor));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Author with id 1 not found", exception.getMessage());
 
-        verify(validator, times(1)).validate(author, UpdateAuthor.class);
+        verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
         verify(service, times(1)).updateAuthor(anyLong(), any(AuthorDto.class));
     }
 }
