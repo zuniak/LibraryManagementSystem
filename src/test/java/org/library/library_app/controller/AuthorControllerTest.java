@@ -8,6 +8,8 @@ import org.library.library_app.dto.BookDto;
 import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.AuthorValidationException;
 import org.library.library_app.service.AuthorService;
+import org.library.library_app.tools.BookCategory;
+import org.library.library_app.tools.BookStatus;
 import org.library.library_app.validationgroups.CreateAuthor;
 import org.library.library_app.validationgroups.UpdateAuthor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +127,7 @@ class AuthorControllerTest {
     @Test
     void getAuthorBooks_WhenBooksFound_ShouldReturnOk() {
         BookDto book= new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         when(service.getAuthorBooksDto(1L)).thenReturn(List.of(book));
 
         ResponseEntity<List<BookDto>> response = controller.getAuthorBooks(1L);

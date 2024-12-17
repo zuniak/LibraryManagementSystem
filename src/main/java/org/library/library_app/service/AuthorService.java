@@ -9,7 +9,8 @@ import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
-import org.library.library_app.tools.DtoMapper;
+import org.library.library_app.tools.AuthorMapper;
+import org.library.library_app.tools.BookMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,21 +24,24 @@ public class AuthorService {
 
     private final AuthorRepository authorRepository;
     private final BookRepository bookRepository;
+    private final AuthorMapper authorMapper;
+    private final BookMapper bookMapper;
 
     public AuthorDto addAuthor(AuthorDto authorDto) {
         Author author = toEntity(authorDto);
-        return DtoMapper.authorToDto(authorRepository.saveAndFlush(author));
+        return authorMapper.authorToDto(authorRepository.saveAndFlush(author));
     }
 
     public List<AuthorDto> getAllAuthorsDto() {
         return authorRepository.findAll()
                 .stream()
-                .map(DtoMapper::authorToDto)
+                .map(authorMapper::authorToDto)
                 .collect(Collectors.toList());
     }
 
     public Optional<AuthorDto> getAuthorDtoById(Long authorId) {
-        return authorRepository.findById(authorId).map(DtoMapper::authorToDto);
+        Optional<Author> authorOpt = authorRepository.findById(authorId);
+        return authorOpt.map(authorMapper::authorToDto);
     }
 
     public List<BookDto> getAuthorBooksDto(Long authorId) {
@@ -45,7 +49,7 @@ public class AuthorService {
         if (authorOpt.isPresent()) {
             Author author = authorOpt.get();
             return author.getBooks().stream()
-                    .map(DtoMapper::bookToDto)
+                    .map(bookMapper::bookToDto)
                     .collect(Collectors.toList());
         }
         throw new AuthorNotFoundException("Author with id " + authorId + " not found");

@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.library.library_app.tools.BookCategory;
+import org.library.library_app.tools.BookStatus;
 import org.library.library_app.validationgroups.CreateBook;
 import org.library.library_app.validationgroups.UpdateBook;
 
@@ -26,11 +28,11 @@ public class BookDto {
     private List<Long> authorsIds;
 
     @NotNull(groups = {CreateBook.class, UpdateBook.class}, message = "Category cannot be null.")
-    private String category;
+    private BookCategory category;
 
     @NotBlank(groups = {CreateBook.class, UpdateBook.class}, message = "Description cannot be blank.")
     private String description;
 
     @NotNull(groups = {UpdateBook.class}, message = "Status is required when updating a book.")
-    private String status;
+    private BookStatus status;
 }

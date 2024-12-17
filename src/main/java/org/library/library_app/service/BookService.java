@@ -9,9 +9,7 @@ import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
-import org.library.library_app.tools.BookCategory;
-import org.library.library_app.tools.BookStatus;
-import org.library.library_app.tools.DtoMapper;
+import org.library.library_app.tools.BookMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,23 +21,23 @@ import java.util.stream.Collectors;
 public class BookService {
     private AuthorRepository authorRepository;
     private BookRepository repository;
+    private BookMapper bookMapper;
 
     @Transactional
     public BookDto addBook(BookDto bookData) {
         Book book = this.toEntity(bookData);
-        System.out.println("AAAAAAAAAAA");
-        return DtoMapper.bookToDto(repository.saveAndFlush(book));
+        return bookMapper.bookToDto(repository.saveAndFlush(book));
     }
 
     public List<BookDto> getAllBooksDto() {
         return repository.findAll()
                 .stream()
-                .map(DtoMapper::bookToDto)
+                .map(bookMapper::bookToDto)
                 .collect(Collectors.toList());
     }
 
     public Optional<BookDto> getBookDto(Long id) {
-        return repository.findById(id).map(DtoMapper::bookToDto);
+        return repository.findById(id).map(bookMapper::bookToDto);
     }
 
     public void deleteBook(Long id) {
@@ -54,21 +52,21 @@ public class BookService {
         }
     }
 
-    public void updateBook(Long id, BookDto bookData) {
+    public void updateBook(Long id, BookDto bookDto) {
         Optional<Book> bookOpt = repository.findById(id);
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
-            book.setTitle(bookData.getTitle());
+            book.setTitle(bookDto.getTitle());
 
             for (Author author : book.getAuthors()) {
                 author.removeBook(book);
             }
             book.getAuthors().clear();
-            addAuthors(book, bookData.getAuthorsIds());
+            addAuthors(book, bookDto.getAuthorsIds());
 
-            book.setCategory(BookCategory.fromString(bookData.getCategory()));
-            book.setDescription(bookData.getDescription());
-            book.setStatus(BookStatus.fromString(bookData.getStatus()));
+            book.setCategory(bookDto.getCategory());
+            book.setDescription(bookDto.getDescription());
+            book.setStatus(bookDto.getStatus());
             repository.save(book);
         } else {
             throw new BookNotFoundException("Book with id " + id + " not found");
@@ -87,9 +85,9 @@ public class BookService {
         }
     }
 
-    public Book toEntity(BookDto bookData) {
-        Book book = new Book(bookData.getTitle(), BookCategory.fromString(bookData.getCategory()), bookData.getDescription());
-        addAuthors(book, bookData.getAuthorsIds());
+    public Book toEntity(BookDto bookDto) {
+        Book book = new Book(bookDto.getTitle(), bookDto.getCategory(), bookDto.getDescription());
+        addAuthors(book, bookDto.getAuthorsIds());
         return book;
     }
 }

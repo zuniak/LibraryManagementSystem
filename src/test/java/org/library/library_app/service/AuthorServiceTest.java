@@ -2,7 +2,6 @@ package org.library.library_app.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
@@ -11,24 +10,31 @@ import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
+import org.library.library_app.tools.AuthorMapper;
 import org.library.library_app.tools.BookCategory;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.library.library_app.tools.BookStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class AuthorServiceTest {
-    @Mock
+    @MockitoBean
     AuthorRepository authorRepository;
-    @Mock
+    @MockitoBean
     BookRepository bookRepository;
+    @MockitoSpyBean
+    AuthorMapper authorMapper;
 
-    @InjectMocks
+    @Autowired
     AuthorService service;
 
     @BeforeEach
@@ -51,6 +57,7 @@ class AuthorServiceTest {
         assertEquals(authorDtoWithId, outAuthor);
 
         verify(authorRepository, times(1)).saveAndFlush(any(Author.class));
+        verify(authorMapper, times(1)).authorToDto(any(Author.class));
     }
 
     @Test
@@ -62,6 +69,7 @@ class AuthorServiceTest {
         assertEquals(List.of(), result);
 
         verify(authorRepository, times(1)).findAll();
+        verify(authorMapper, never()).authorToDto(any(Author.class));
     }
 
     @Test
@@ -78,6 +86,7 @@ class AuthorServiceTest {
         assertEquals(List.of(authorDto), result);
 
         verify(authorRepository, times(1)).findAll();
+        verify(authorMapper, times(1)).authorToDto(any(Author.class));
     }
 
     @Test
@@ -89,6 +98,7 @@ class AuthorServiceTest {
         assertEquals(Optional.empty(), result);
 
         verify(authorRepository, times(1)).findById(anyLong());
+        verify(authorMapper, never()).authorToDto(any(Author.class));
     }
 
     @Test
@@ -105,6 +115,7 @@ class AuthorServiceTest {
         assertEquals(authorDto, result.get());
 
         verify(authorRepository, times(1)).findById(anyLong());
+        verify(authorMapper, times(1)).authorToDto(any(Author.class));
     }
 
     @Test
@@ -115,7 +126,7 @@ class AuthorServiceTest {
         book.setId(1L);
         book.addAuthor(author);
         author.addBook(book);
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "Available");
+        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
 

@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.library.library_app.tools.BookCategory;
 import org.library.library_app.tools.BookStatus;
 
@@ -31,12 +29,14 @@ public class Book {
     private List<Author> authors;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private BookCategory category;
 
     @NotBlank
     private String description;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private BookStatus status;
 
     public void addAuthor(Author author) {

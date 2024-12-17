@@ -11,10 +11,15 @@ import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
 import org.library.library_app.tools.BookCategory;
+import org.library.library_app.tools.BookMapper;
 import org.library.library_app.tools.BookStatus;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,14 +27,17 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class BookServiceTest {
-    @Mock
+    @MockitoBean
     AuthorRepository authorRepository;
-    @Mock
+    @MockitoBean
     BookRepository bookRepository;
 
-    @InjectMocks
+    @MockitoSpyBean
+    BookMapper bookMapper;
+
+    @Autowired
     BookService service;
 
     @BeforeEach
@@ -44,8 +52,8 @@ class BookServiceTest {
         author.setId(1L);
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
 
-        BookDto bookDto = new BookDto(null, "Title", List.of(1L), "Fiction", "Description", "Available");
-        BookDto bookDtoWithId = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "Available");
+        BookDto bookDto = new BookDto(null, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
+        BookDto bookDtoWithId = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         Book book = new Book("Title", BookCategory.FICTION, "Description");
         book.setId(1L);
         book.addAuthor(author);
@@ -57,12 +65,13 @@ class BookServiceTest {
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(1)).saveAndFlush(any(Book.class));
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test
     void addBook_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
-        BookDto bookDto = new BookDto(null, "Title", List.of(1L), "Fiction", "Description", "Available");
+        BookDto bookDto = new BookDto(null, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> service.addBook(bookDto));
@@ -71,6 +80,8 @@ class BookServiceTest {
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, never()).saveAndFlush(any(Book.class));
+        verify(bookMapper, never()).bookToDto(any(Book.class));
+
     }
 
     @Test
@@ -82,6 +93,7 @@ class BookServiceTest {
         assertEquals(List.of(), result);
 
         verify(bookRepository, times(1)).findAll();
+        verify(bookMapper, never()).bookToDto(any(Book.class));
     }
 
     @Test
@@ -96,10 +108,11 @@ class BookServiceTest {
 
         List<BookDto> result = service.getAllBooksDto();
 
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "Available");
+        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         assertEquals(List.of(bookDto), result);
 
         verify(bookRepository, times(1)).findAll();
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test
@@ -116,10 +129,11 @@ class BookServiceTest {
 
         assertTrue(result.isPresent());
 
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "Available");
+        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         assertEquals(bookDto, result.get());
 
         verify(bookRepository, times(1)).findById(anyLong());
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test
@@ -131,6 +145,7 @@ class BookServiceTest {
         assertTrue(result.isEmpty());
 
         verify(bookRepository, times(1)).findById(anyLong());
+        verify(bookMapper, never()).bookToDto(any(Book.class));
     }
 
     @Test
@@ -176,7 +191,7 @@ class BookServiceTest {
         author1.addBook(book);
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
-        BookDto bookDto = new BookDto(1L, "Title2", List.of(2L), BookCategory.HISTORY.toString(), "Description2", BookStatus.RESERVED.toString());
+        BookDto bookDto = new BookDto(1L, "Title2", List.of(2L), BookCategory.HISTORY, "Description2", BookStatus.RESERVED);
 
         service.updateBook(1L, bookDto);
 
@@ -198,7 +213,7 @@ class BookServiceTest {
     void updateBook_WhenBookNotFound_ShouldThrowBookNotFoundException() {
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
 
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "available");
+        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> service.updateBook(1L, bookDto));
@@ -215,7 +230,7 @@ class BookServiceTest {
         Author author = new Author("First Name", "Last Name");
         author.setId(1L);
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), "Fiction", "Description", "available");
+        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         Book book = new Book("Title", BookCategory.FICTION, "Description");
         book.setId(1L);
         book.addAuthor(author);

@@ -1,5 +1,7 @@
 package org.library.library_app.tools;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.library.library_app.exceptions.UnknownBookCategoryException;
 
 public enum BookCategory {
@@ -9,6 +11,7 @@ public enum BookCategory {
     HISTORY,
     BIOGRAPHY;
 
+    @JsonCreator
     public static BookCategory fromString(String category) {
         for (BookCategory bookCategory : BookCategory.values()) {
             if(bookCategory.name().equalsIgnoreCase(category)) {
@@ -19,6 +22,7 @@ public enum BookCategory {
     }
 
     @Override
+    @JsonValue
     public String toString() {
         return name().charAt(0) + name().substring(1).toLowerCase();
     }

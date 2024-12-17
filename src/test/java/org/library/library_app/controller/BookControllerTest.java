@@ -7,6 +7,8 @@ import org.library.library_app.dto.BookDto;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.exceptions.BookValidationException;
 import org.library.library_app.service.BookService;
+import org.library.library_app.tools.BookCategory;
+import org.library.library_app.tools.BookStatus;
 import org.library.library_app.validationgroups.CreateBook;
 import org.library.library_app.validationgroups.UpdateBook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +44,10 @@ class BookControllerTest {
     @Test
     void addBook_WhenValidRequest_ShouldReturnCreated() {
         BookDto book = new BookDto(null, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         BookDto bookWithId = new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         when(service.addBook(book)).thenReturn(bookWithId);
 
@@ -61,7 +63,7 @@ class BookControllerTest {
     @Test
     void addBook_WhenInvalidRequest_ShouldThrowBookValidationException() {
         BookDto book = new BookDto(null, "", List.of(),
-                "", "", null);
+                null, "", null);
 
         when(validator.validate(book, CreateBook.class)).thenThrow(new BookValidationException("Book create validation failed"));
 
@@ -88,7 +90,7 @@ class BookControllerTest {
     @Test
     void getAllBooks_WhenBooksFound_ShouldReturnOk() {
         BookDto book = new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         when(service.getAllBooksDto()).thenReturn(List.of(book));
 
@@ -103,7 +105,7 @@ class BookControllerTest {
     @Test
     void getBook_WhenBookFound_ShouldReturnOk() {
         BookDto book = new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         when(service.getBookDto(1L)).thenReturn(Optional.of(book));
 
@@ -150,7 +152,7 @@ class BookControllerTest {
     @Test
     void updateBook_WhenValidRequestAndBookFound_ShouldReturnNoContent(){
         BookDto book = new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         ResponseEntity<Void> response = controller.updateBook(1L, book);
 
@@ -163,7 +165,7 @@ class BookControllerTest {
     @Test
     void updateBook_WhenInvalidRequest_ShouldThrowBookValidationException(){
         BookDto book = new BookDto(null, "", List.of(),
-                "", "", null);
+                null, "", null);
 
         when(validator.validate(book, UpdateBook.class)).thenThrow(new BookValidationException("Book update validation failed"));
 
@@ -179,7 +181,7 @@ class BookControllerTest {
     @Test
     void updateBook_WhenValidRequestButBookNotFound_ShouldThrowBookNotFoundException(){
         BookDto book = new BookDto(1L, "Title", List.of(1L),
-                "Fictional", "Description", "available");
+                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         doThrow(new BookNotFoundException("Book with id 1 not found")).when(service).updateBook(1L, book);
 
