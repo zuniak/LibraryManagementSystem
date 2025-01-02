@@ -2,21 +2,23 @@ package org.library.library_app.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
+import org.library.library_app.exceptions.AuthorIdDoNotMatchException;
 import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
+import org.library.library_app.testdata.AuthorMother;
+import org.library.library_app.testdata.BookMother;
 import org.library.library_app.tools.AuthorMapper;
-import org.library.library_app.tools.BookCategory;
-import org.library.library_app.tools.BookStatus;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.library.library_app.tools.BookMapper;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,39 +27,49 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class AuthorServiceTest {
-    @MockitoBean
+    @Mock
     AuthorRepository authorRepository;
-    @MockitoBean
+    @Mock
     BookRepository bookRepository;
-    @MockitoSpyBean
+    @Mock
     AuthorMapper authorMapper;
+    @Mock
+    BookMapper bookMapper;
 
-    @Autowired
+    @InjectMocks
     AuthorService service;
 
     @BeforeEach
     void resetMocks() {
         reset(authorRepository);
         reset(bookRepository);
+        reset(authorMapper);
+        reset(bookMapper);
     }
 
     @Test
     void addAuthor_ShouldReturnSavedAuthorDto() {
-        AuthorDto authorDto = new AuthorDto(null, "First Name", "Last Name", null);
-        AuthorDto authorDtoWithId = new AuthorDto(1L, "First Name", "Last Name", Set.of());
-        Author authorWithId = new Author("First Name", "Last Name");
-        authorWithId.setId(1L);
+        AuthorDto authorDtoToSave = AuthorMother.createDtoValidCreateAuthor();
+        Author author = AuthorMother.createAuthor(null);
+        AuthorDto savedAuthorDto = AuthorMother.createDto(1L);
 
-        when(authorRepository.saveAndFlush(any(Author.class))).thenReturn(authorWithId);
+        when(authorMapper.authorFromDto(authorDtoToSave)).thenReturn(author);
+        doAnswer(invocation -> {
+            Author targetAuthor = invocation.getArgument(0);
+            targetAuthor.setId(1L);
+            return targetAuthor;
+        }).when(authorRepository).saveAndFlush(author);
+        when(authorMapper.authorToDto(author)).thenReturn(savedAuthorDto);
 
-        AuthorDto outAuthor = service.addAuthor(authorDto);
+        AuthorDto result = service.addAuthor(authorDtoToSave);
 
-        assertEquals(authorDtoWithId, outAuthor);
+        assertEquals(savedAuthorDto, result);
 
         verify(authorRepository, times(1)).saveAndFlush(any(Author.class));
         verify(authorMapper, times(1)).authorToDto(any(Author.class));
+        verify(authorMapper, times(1)).authorFromDto(any(AuthorDto.class));
     }
 
     @Test
@@ -74,12 +86,11 @@ class AuthorServiceTest {
 
     @Test
     void getAllAuthorsDto_WhenAuthorFound_ShouldReturnListWithAuthor() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        AuthorDto authorDto = new AuthorDto(1L, "First Name", "Last Name", Set.of());
-
+        Author author = AuthorMother.createAuthor(1L);
+        AuthorDto authorDto = AuthorMother.createDto(1L);
 
         when(authorRepository.findAll()).thenReturn(List.of(author));
+        when(authorMapper.authorToDto(author)).thenReturn(authorDto);
 
         List<AuthorDto> result = service.getAllAuthorsDto();
 
@@ -95,7 +106,7 @@ class AuthorServiceTest {
 
         Optional<AuthorDto> result = service.getAuthorDtoById(1L);
 
-        assertEquals(Optional.empty(), result);
+        assertTrue(result.isEmpty());
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(authorMapper, never()).authorToDto(any(Author.class));
@@ -103,11 +114,11 @@ class AuthorServiceTest {
 
     @Test
     void getAuthorDtoById_WhenAuthorFound_ShouldReturnAuthorDto() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        AuthorDto authorDto = new AuthorDto(1L, "First Name", "Last Name", Set.of());
+        Author author = AuthorMother.createAuthor(1L);
+        AuthorDto authorDto = AuthorMother.createDto(1L);
 
-        when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(authorRepository.findById(anyLong())).thenReturn(Optional.of(author));
+        when(authorMapper.authorToDto(author)).thenReturn(authorDto);
 
         Optional<AuthorDto> result = service.getAuthorDtoById(1L);
 
@@ -120,27 +131,24 @@ class AuthorServiceTest {
 
     @Test
     void getAuthorsBooksDto_WhenAuthorFoundWithBooks_ShouldReturnListOfBookDto() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
-        author.addBook(book);
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
 
         List<BookDto> result = service.getAuthorBooksDto(1L);
 
         assertEquals(List.of(bookDto), result);
 
         verify(authorRepository, times(1)).findById(anyLong());
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test
     void getAuthorsBooksDto_WhenAuthorFoundWithNoBooks_ShouldReturnEmptyList() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
+        Author author = AuthorMother.createAuthor(1L);
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
 
@@ -149,6 +157,7 @@ class AuthorServiceTest {
         assertEquals(List.of(), result);
 
         verify(authorRepository, times(1)).findById(anyLong());
+        verify(bookMapper, never()).bookToDto(any(Book.class));
     }
 
     @Test
@@ -165,8 +174,7 @@ class AuthorServiceTest {
 
     @Test
     void deleteAuthor_WhenAuthorFound_ShouldReturnTrue() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
+        Author author = AuthorMother.createAuthor(1L);
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
 
@@ -191,11 +199,13 @@ class AuthorServiceTest {
 
     @Test
     void updateAuthor_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
+
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
-        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", null);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> service.updateAuthor(1L, updatedAuthor));
+
 
         assertEquals("Author with id 1 not found", exception.getMessage());
 
@@ -205,10 +215,9 @@ class AuthorServiceTest {
 
     @Test
     void updateAuthor_WhenAuthorFoundButNewBookNotFound_ShouldThrowBookNotFoundException() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
+        Author author = AuthorMother.createAuthor(1L);
 
-        AuthorDto updatedAuthor = new AuthorDto(1L, "New First Name", "New Last Name", Set.of(1L));
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
@@ -226,36 +235,46 @@ class AuthorServiceTest {
 
     @Test
     void updateAuthor_WhenAuthorFoundAndNewBooksFound_ShouldUpdateAuthorBooks() {
-        Book book1 = new Book("Title1", BookCategory.FICTION, "Description1");
-        book1.setId(1L);
-        Book book2 = new Book("Title2", BookCategory.FICTION, "Description2");
-        book2.setId(2L);
-        Book book3 = new Book("Title3", BookCategory.FICTION, "Description3");
-        book3.setId(3L);
+        Author author = AuthorMother.createAuthor(1L);
 
+        Book book1 = BookMother.createBook(1L, List.of(author));
+        Book book2 = BookMother.createBook(2L, List.of(author));
 
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        author.addBook(book1);
-        author.addBook(book2);
-        book1.addAuthor(author);
-        book2.addAuthor(author);
+        AuthorDto updatedAuthorDto = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(2L, 3L));
 
-        AuthorDto updatedAuthor = new AuthorDto(1L, "New First Name", "New Last Name", Set.of(2L, 3L));
-
+        Book book3 = BookMother.createBook(3L, List.of(AuthorMother.createAuthor(2L)));
 
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
+
+        doNothing().when(authorMapper).updateAuthorFromDto(author, updatedAuthorDto);
 
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
         when(bookRepository.findById(3L)).thenReturn(Optional.of(book3));
 
-        service.updateAuthor(1L, updatedAuthor);
+        service.updateAuthor(1L, updatedAuthorDto);
 
         assertEquals(Set.of(book2, book3), author.getBooks());
+        assertEquals(2, book3.getAuthors().size());
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(2)).findById(anyLong());
         verify(bookRepository, times(1)).deleteById(anyLong());
         verify(authorRepository, times(1)).save(any(Author.class));
+    }
+
+    @Test
+    void updateAuthor_WhenAuthorIdDoesNotMatch_ShouldThrowAuthorIdDoNotMatchException() {
+        Author author = AuthorMother.createAuthor(1L);
+
+        AuthorDto updatedAuthorDto = AuthorMother.createDtoValidUpdateAuthor(2L, Set.of(1L));
+
+        when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
+
+        AuthorIdDoNotMatchException exception = assertThrows(AuthorIdDoNotMatchException.class,
+                () -> service.updateAuthor(1L, updatedAuthorDto));
+
+        assertEquals("Author id does not match", exception.getMessage());
+
+        verify(authorRepository, times(1)).findById(anyLong());
     }
 }

@@ -7,37 +7,34 @@ import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
 import org.library.library_app.exceptions.AuthorNotFoundException;
+import org.library.library_app.exceptions.BookIdDoNotMatchException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
-import org.library.library_app.tools.BookCategory;
+import org.library.library_app.testdata.AuthorMother;
+import org.library.library_app.testdata.BookMother;
 import org.library.library_app.tools.BookMapper;
-import org.library.library_app.tools.BookStatus;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class BookServiceTest {
-    @MockitoBean
+    @Mock
     AuthorRepository authorRepository;
-    @MockitoBean
+    @Mock
     BookRepository bookRepository;
-
-    @MockitoSpyBean
+    @Mock
     BookMapper bookMapper;
 
-    @Autowired
+    @InjectMocks
     BookService service;
 
     @BeforeEach
@@ -48,40 +45,50 @@ class BookServiceTest {
 
     @Test
     void addBook_WhenAuthorFound_ShouldReturnSavedBookDto() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
+        Author author = AuthorMother.createAuthor(1L);
+
+        BookDto bookDtoToSave = BookMother.createDtoValidCreateBook(List.of(1L));
+        Book book = BookMother.createBook(null, List.of());
+        BookDto savedBookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(bookMapper.bookFromDto(bookDtoToSave)).thenReturn(book);
         when(authorRepository.findById(1L)).thenReturn(Optional.of(author));
+        doAnswer(invocation -> {
+            Book targetBook = invocation.getArgument(0);
+            targetBook.setId(1L);
+            return targetBook;
+        }).when(bookRepository).saveAndFlush(book);
+        when(bookMapper.bookToDto(book)).thenReturn(savedBookDto);
 
-        BookDto bookDto = new BookDto(null, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
-        BookDto bookDtoWithId = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
-        when(bookRepository.saveAndFlush(any(Book.class))).thenReturn(book);
+        BookDto result = service.addBook(bookDtoToSave);
 
-        BookDto result = service.addBook(bookDto);
-
-        assertEquals(bookDtoWithId, result);
+        assertEquals(savedBookDto, result);
+        assertEquals(Set.of(book), author.getBooks());
+        assertEquals(List.of(author), book.getAuthors());
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(1)).saveAndFlush(any(Book.class));
+        verify(bookMapper, times(1)).bookFromDto(any(BookDto.class));
         verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test
     void addBook_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
+        BookDto bookDtoToSave = BookMother.createDtoValidCreateBook(List.of(1L));
+        Book book = BookMother.createBook(null, List.of());
+
+        when(bookMapper.bookFromDto(bookDtoToSave)).thenReturn(book);
         when(authorRepository.findById(1L)).thenReturn(Optional.empty());
-        BookDto bookDto = new BookDto(null, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
-                () -> service.addBook(bookDto));
+                () -> service.addBook(bookDtoToSave));
 
         assertEquals("Author with id 1 not found", exception.getMessage());
 
         verify(authorRepository, times(1)).findById(anyLong());
         verify(bookRepository, never()).saveAndFlush(any(Book.class));
+        verify(bookMapper, times(1)).bookFromDto(any(BookDto.class));
         verify(bookMapper, never()).bookToDto(any(Book.class));
-
     }
 
     @Test
@@ -98,17 +105,15 @@ class BookServiceTest {
 
     @Test
     void getAllBooksDto_WhenBooksFound_ShouldReturnListOfBooks() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
-        author.addBook(book);
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
         when(bookRepository.findAll()).thenReturn(List.of(book));
 
         List<BookDto> result = service.getAllBooksDto();
 
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         assertEquals(List.of(bookDto), result);
 
         verify(bookRepository, times(1)).findAll();
@@ -117,19 +122,16 @@ class BookServiceTest {
 
     @Test
     void getBookDto_WhenBookFound_ShouldReturnBookDto() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
-        author.addBook(book);
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         Optional<BookDto> result = service.getBookDto(1L);
 
         assertTrue(result.isPresent());
-
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
         assertEquals(bookDto, result.get());
 
         verify(bookRepository, times(1)).findById(anyLong());
@@ -150,15 +152,14 @@ class BookServiceTest {
 
     @Test
     void deleteBook_WhenBookFound_ShouldDelete() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
-        author.addBook(book);
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         service.deleteBook(1L);
+
+        assertTrue(author.getBooks().isEmpty());
 
         verify(bookRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(1)).deleteById(anyLong());
@@ -179,30 +180,23 @@ class BookServiceTest {
 
     @Test
     void updateBook_WhenBookFound_ShouldUpdateBook() {
-        Author author1 = new Author("First Name1", "Last Name1");
-        author1.setId(1L);
-        Author author2 = new Author("First Name2", "Last Name2");
-        author1.setId(2L);
+        Author author1 = AuthorMother.createAuthor(1L);
+        Author author2 = AuthorMother.createAuthor(2L);
 
-        when(authorRepository.findById(2L)).thenReturn(Optional.of(author2));
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author1);
-        author1.addBook(book);
+        Book book = BookMother.createBook(1L, List.of(author1));
+
+        BookDto updatedBookDto = BookMother.createDtoValidUpdateBook(1L, List.of(2L));
+
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(authorRepository.findById(2L)).thenReturn(Optional.of(author2));
+        when(bookRepository.save(book)).thenReturn(book);
 
-        BookDto bookDto = new BookDto(1L, "Title2", List.of(2L), BookCategory.HISTORY, "Description2", BookStatus.RESERVED);
+        service.updateBook(1L, updatedBookDto);
 
-        service.updateBook(1L, bookDto);
-
-        assertEquals("Title2", book.getTitle());
         assertEquals(List.of(author2), book.getAuthors());
-        assertEquals(BookCategory.HISTORY, book.getCategory());
-        assertEquals("Description2", book.getDescription());
-        assertEquals(BookStatus.RESERVED, book.getStatus());
 
         assertTrue(author1.getBooks().isEmpty());
-        assertTrue(author2.getBooks().contains(book));
+        assertEquals(Set.of(book), author2.getBooks());
 
         verify(bookRepository, times(1)).findById(anyLong());
         verify(bookRepository, times(1)).save(any(Book.class));
@@ -213,7 +207,7 @@ class BookServiceTest {
     void updateBook_WhenBookNotFound_ShouldThrowBookNotFoundException() {
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
 
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
+        BookDto bookDto = BookMother.createDtoValidUpdateBook(1L, List.of(1L));
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> service.updateBook(1L, bookDto));
@@ -227,24 +221,37 @@ class BookServiceTest {
 
     @Test
     void updateBook_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
-        Author author = new Author("First Name", "Last Name");
-        author.setId(1L);
-        when(authorRepository.findById(1L)).thenReturn(Optional.empty());
-        BookDto bookDto = new BookDto(1L, "Title", List.of(1L), BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
-        Book book = new Book("Title", BookCategory.FICTION, "Description");
-        book.setId(1L);
-        book.addAuthor(author);
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+        BookDto updatedBook = BookMother.createDtoValidUpdateBook(1L, List.of(2L));
+
+        when(authorRepository.findById(2L)).thenReturn(Optional.empty());
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
-                () -> service.updateBook(1L, bookDto));
+                () -> service.updateBook(1L, updatedBook));
 
-        assertEquals("Author with id 1 not found", exception.getMessage());
+        assertEquals("Author with id 2 not found", exception.getMessage());
 
         verify(bookRepository, times(1)).findById(anyLong());
         verify(bookRepository, never()).save(any(Book.class));
         verify(authorRepository, times(1)).findById(anyLong());
-        verify(authorRepository, never()).save(any(Author.class));
     }
 
+    @Test
+    void updateBook_WhenBookIdDoesNotMatch_ShouldThrowBookIdDoNotMatchException() {
+        Book book = BookMother.createBook(1L, List.of(AuthorMother.createAuthor(1L)));
+        BookDto updatedBook = BookMother.createDtoValidUpdateBook(2L, List.of(1L));
+
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+
+        BookIdDoNotMatchException exception = assertThrows(BookIdDoNotMatchException.class,
+                () -> service.updateBook(1L, updatedBook));
+
+        assertEquals("Book id does not match", exception.getMessage());
+
+        verify(bookRepository, times(1)).findById(anyLong());
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(authorRepository, never()).findById(anyLong());
+    }
 }

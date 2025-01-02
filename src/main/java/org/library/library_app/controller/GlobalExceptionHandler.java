@@ -74,4 +74,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleUnknownBookStatusException(UnknownBookStatusException exception) {
         return ResponseEntity.badRequest().body(exception.getMessage());
     }
+
+    @ExceptionHandler(AuthorIdDoNotMatchException.class)
+    public ResponseEntity<String> handleAuthorIdDoNotMatchException(AuthorIdDoNotMatchException exception) {
+        return ResponseEntity.badRequest().body(exception.getMessage());
+    }
+
+    @ExceptionHandler(BookIdDoNotMatchException.class)
+    public ResponseEntity<String> handleBookIdDoNotMatchException(BookIdDoNotMatchException exception) {
+        return ResponseEntity.badRequest().body(exception.getMessage());
+    }
 }

@@ -25,12 +25,11 @@ public class Author {
     private String lastName;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Book> books;
+    private Set<Book> books = new HashSet<>();
 
     public Author(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.books = new HashSet<>();
     }
     public void addBook(Book newBook) {
         books.add(newBook);

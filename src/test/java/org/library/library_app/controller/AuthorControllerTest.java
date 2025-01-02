@@ -1,25 +1,27 @@
 package org.library.library_app.controller;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
+import org.library.library_app.exceptions.AuthorIdDoNotMatchException;
 import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.AuthorValidationException;
+import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.service.AuthorService;
-import org.library.library_app.tools.BookCategory;
-import org.library.library_app.tools.BookStatus;
+import org.library.library_app.testdata.AuthorMother;
+import org.library.library_app.testdata.BookMother;
 import org.library.library_app.validationgroups.CreateAuthor;
 import org.library.library_app.validationgroups.UpdateAuthor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,15 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class AuthorControllerTest {
-    @MockitoBean
+    @Mock
     AuthorService service;
 
-    @MockitoSpyBean
+    @Mock
     Validator validator;
 
-    @Autowired
+    @InjectMocks
     AuthorController controller;
 
     @BeforeEach
@@ -47,33 +49,37 @@ class AuthorControllerTest {
 
     @Test
     void addAuthor_WhenValidRequest_ShouldReturnCreated() {
-        AuthorDto author = new AuthorDto(null, "First Name", "Last Name", null);
-        AuthorDto authorDtoWithId = new AuthorDto(1L, "First Name", "Last Name", null);
+        AuthorDto authorDto = AuthorMother.createDtoValidCreateAuthor();
+        AuthorDto savedDto = AuthorMother.createDto(1L);
 
-        when(service.addAuthor(author)).thenReturn(authorDtoWithId);
+        when(validator.validate(authorDto, CreateAuthor.class)).thenReturn(Set.of());
+        when(service.addAuthor(authorDto)).thenReturn(savedDto);
 
-        ResponseEntity<AuthorDto> response = controller.addAuthor(author);
+        ResponseEntity<AuthorDto> response = controller.addAuthor(authorDto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(authorDtoWithId, response.getBody());
+        assertEquals(savedDto, response.getBody());
 
-        verify(validator, times(1)).validate(author, CreateAuthor.class);
-        verify(service, times(1)).addAuthor(author);
+        verify(validator, times(1)).validate(authorDto, CreateAuthor.class);
+        verify(service, times(1)).addAuthor(authorDto);
     }
 
     @Test
     void addAuthor_WhenInvalidRequest_ShouldThrowAuthorValidationException() {
-        AuthorDto author = new AuthorDto(null, "", "", null);
+        AuthorDto authorDto = AuthorMother.createDtoInvalidCreateAuthor();
 
-        when(validator.validate(author, CreateAuthor.class)).thenThrow(new AuthorValidationException("Author create validation failed"));
+        @SuppressWarnings("unchecked") // Mock used to make validator returns not empty set.
+        ConstraintViolation<AuthorDto> violation = mock(ConstraintViolation.class);
+
+        when(validator.validate(authorDto, CreateAuthor.class)).thenReturn(Set.of(violation));
 
         AuthorValidationException exception = assertThrows(AuthorValidationException.class,
-                () -> controller.addAuthor(author));
+                () -> controller.addAuthor(authorDto));
 
         assertEquals("Author create validation failed", exception.getMessage());
 
-        verify(validator, times(1)).validate(author, CreateAuthor.class);
-        verify(service, never()).addAuthor(author);
+        verify(validator, times(1)).validate(authorDto, CreateAuthor.class);
+        verify(service, never()).addAuthor(authorDto);
     }
 
     @Test
@@ -89,26 +95,28 @@ class AuthorControllerTest {
 
     @Test
     void getAllAuthors_WhenAuthorsFound_ShouldReturnOk() {
-        AuthorDto author = new AuthorDto(1L, "Name", "Lastname", new HashSet<>(1));
-        when(service.getAllAuthorsDto()).thenReturn(List.of(author));
+        AuthorDto authorDto = AuthorMother.createDto(1L);
+
+        when(service.getAllAuthorsDto()).thenReturn(List.of(authorDto));
 
         ResponseEntity<List<AuthorDto>> response = controller.getAllAuthors();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(List.of(author), response.getBody());
+        assertEquals(List.of(authorDto), response.getBody());
 
         verify(service, times(1)).getAllAuthorsDto();
     }
 
     @Test
     void getAuthorById_WhenAuthorFound_ShouldReturnOk() {
-        AuthorDto author = new AuthorDto(1L, "Name", "Lastname", new HashSet<>(1));
-        when(service.getAuthorDtoById(1L)).thenReturn(Optional.of(author));
+        AuthorDto authorDto = AuthorMother.createDto(1L);
+
+        when(service.getAuthorDtoById(1L)).thenReturn(Optional.of(authorDto));
 
         ResponseEntity<AuthorDto> response = controller.getAuthorById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(author, response.getBody());
+        assertEquals(authorDto, response.getBody());
 
         verify(service, times(1)).getAuthorDtoById(anyLong());
     }
@@ -125,21 +133,21 @@ class AuthorControllerTest {
     }
 
     @Test
-    void getAuthorBooks_WhenBooksFound_ShouldReturnOk() {
-        BookDto book= new BookDto(1L, "Title", List.of(1L),
-                BookCategory.FICTION, "Description", BookStatus.AVAILABLE);
-        when(service.getAuthorBooksDto(1L)).thenReturn(List.of(book));
+    void getAuthorBooks_WhenAuthorAndBooksFound_ShouldReturnOk() {
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(service.getAuthorBooksDto(1L)).thenReturn(List.of(bookDto));
 
         ResponseEntity<List<BookDto>> response = controller.getAuthorBooks(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(List.of(book), response.getBody());
+        assertEquals(List.of(bookDto), response.getBody());
 
         verify(service, times(1)).getAuthorBooksDto(anyLong());
     }
 
     @Test
-    void getAuthorBooks_WhenNoBookFound_ShouldReturnNoContent() {
+    void getAuthorBooks_WhenBooksNotFound_ShouldReturnNoContent() {
         when(service.getAuthorBooksDto(1L)).thenReturn(List.of());
 
         ResponseEntity<List<BookDto>> response = controller.getAuthorBooks(1L);
@@ -183,8 +191,10 @@ class AuthorControllerTest {
     }
 
     @Test
-    void updateAuthor_WhenValidRequestAuthorFound_ShouldReturnOk(){
-        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", Set.of());
+    void updateAuthor_WhenValidRequestAndAuthorFound_ShouldReturnOk(){
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
+
+        when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
 
         ResponseEntity<Void> response = controller.updateAuthor(1L, updatedAuthor);
 
@@ -195,23 +205,10 @@ class AuthorControllerTest {
     }
 
     @Test
-    void updateAuthor_WhenInvalidRequest_ShouldThrowAuthorValidationException(){
-        AuthorDto author = new AuthorDto(null, "", "", null);
+    void updateAuthor_WhenValidRequestButAuthorNotFound_ShouldThrowAuthorNotFoundException(){
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
 
-        when(validator.validate(author, UpdateAuthor.class)).thenThrow(new AuthorValidationException("Author update validation failed"));
-
-        AuthorValidationException exception = assertThrows(AuthorValidationException.class,
-                () -> controller.updateAuthor(1L, author));
-
-        assertEquals("Author update validation failed", exception.getMessage());
-
-        verify(validator, times(1)).validate(author, UpdateAuthor.class);
-    }
-
-    @Test
-    void updateAuthor_WhenValidRequestAuthorNotFound_ShouldThrowAuthorNotFoundException(){
-        AuthorDto updatedAuthor = new AuthorDto(1L, "First Name", "Last Name", Set.of());
-
+        when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
         doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).updateAuthor(1L, updatedAuthor);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
@@ -221,5 +218,54 @@ class AuthorControllerTest {
 
         verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
         verify(service, times(1)).updateAuthor(anyLong(), any(AuthorDto.class));
+    }
+
+    @Test
+    void updateAuthor_WhenValidRequestButIdDoNotMatch_ShouldThrowAuthorIdDoNotMatchException(){
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
+
+        when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
+        doThrow(new AuthorIdDoNotMatchException("Author id does not match")).when(service).updateAuthor(2L, updatedAuthor);
+
+        AuthorIdDoNotMatchException exception = assertThrows(AuthorIdDoNotMatchException.class,
+                () -> controller.updateAuthor(2L, updatedAuthor));
+
+        assertEquals("Author id does not match", exception.getMessage());
+
+        verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
+        verify(service, times(1)).updateAuthor(anyLong(), any(AuthorDto.class));
+    }
+
+    @Test
+    void updateAuthor_WhenValidRequestButBookNotFound_ShouldThrowBookNotFoundException(){
+        AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
+
+        when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
+        doThrow(new BookNotFoundException("Book with id 1 not found")).when(service).updateAuthor(1L, updatedAuthor);
+
+        BookNotFoundException exception = assertThrows(BookNotFoundException.class,
+                () -> controller.updateAuthor(1L, updatedAuthor));
+
+        assertEquals("Book with id 1 not found", exception.getMessage());
+
+        verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
+        verify(service, times(1)).updateAuthor(anyLong(), any(AuthorDto.class));
+    }
+
+    @Test
+    void updateAuthor_WhenInvalidRequest_ShouldThrowAuthorValidationException(){
+        AuthorDto updatedAuthor = AuthorMother.createDtoInvalidUpdateAuthor();
+
+        @SuppressWarnings("unchecked") // Mock used to make validator returns not empty set.
+        ConstraintViolation<AuthorDto> violation = mock(ConstraintViolation.class);
+
+        when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of(violation));
+
+        AuthorValidationException exception = assertThrows(AuthorValidationException.class,
+                () -> controller.updateAuthor(1L, updatedAuthor));
+
+        assertEquals("Author update validation failed", exception.getMessage());
+
+        verify(validator, times(1)).validate(updatedAuthor, UpdateAuthor.class);
     }
 }

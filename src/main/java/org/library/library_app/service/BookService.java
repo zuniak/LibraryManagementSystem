@@ -6,6 +6,7 @@ import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
 import org.library.library_app.exceptions.AuthorNotFoundException;
+import org.library.library_app.exceptions.BookIdDoNotMatchException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
 import org.library.library_app.repository.BookRepository;
@@ -18,45 +19,50 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class BookService {
     private AuthorRepository authorRepository;
-    private BookRepository repository;
+    private BookRepository bookRepository;
     private BookMapper bookMapper;
 
-    @Transactional
-    public BookDto addBook(BookDto bookData) {
-        Book book = this.toEntity(bookData);
-        return bookMapper.bookToDto(repository.saveAndFlush(book));
+
+    public BookDto addBook(BookDto bookDto) {
+        Book book = bookMapper.bookFromDto(bookDto);
+        addAuthors(book, bookDto.getAuthorsIds());
+        return bookMapper.bookToDto(bookRepository.saveAndFlush(book));
     }
 
     public List<BookDto> getAllBooksDto() {
-        return repository.findAll()
+        return bookRepository.findAll()
                 .stream()
                 .map(bookMapper::bookToDto)
                 .collect(Collectors.toList());
     }
 
     public Optional<BookDto> getBookDto(Long id) {
-        return repository.findById(id).map(bookMapper::bookToDto);
+        return bookRepository.findById(id).map(bookMapper::bookToDto);
     }
 
     public void deleteBook(Long id) {
-        Optional<Book> bookOpt = repository.findById(id);
+        Optional<Book> bookOpt = bookRepository.findById(id);
         if (bookOpt.isPresent()) {
             for (Author author : bookOpt.get().getAuthors()) {
                 author.removeBook(bookOpt.get());
             }
-            repository.deleteById(id);
+            bookRepository.deleteById(id);
         } else {
             throw new BookNotFoundException("Book with id " + id + " not found");
         }
     }
 
     public void updateBook(Long id, BookDto bookDto) {
-        Optional<Book> bookOpt = repository.findById(id);
+        Optional<Book> bookOpt = bookRepository.findById(id);
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
-            book.setTitle(bookDto.getTitle());
+            if (!bookDto.getId().equals(id)) {
+                throw new BookIdDoNotMatchException("Book id does not match");
+            }
+            bookMapper.updateBookFromDto(book, bookDto);
 
             for (Author author : book.getAuthors()) {
                 author.removeBook(book);
@@ -64,10 +70,7 @@ public class BookService {
             book.getAuthors().clear();
             addAuthors(book, bookDto.getAuthorsIds());
 
-            book.setCategory(bookDto.getCategory());
-            book.setDescription(bookDto.getDescription());
-            book.setStatus(bookDto.getStatus());
-            repository.save(book);
+            bookRepository.save(book);
         } else {
             throw new BookNotFoundException("Book with id " + id + " not found");
         }
@@ -83,11 +86,5 @@ public class BookService {
             book.addAuthor(author);
             author.addBook(book);
         }
-    }
-
-    public Book toEntity(BookDto bookDto) {
-        Book book = new Book(bookDto.getTitle(), bookDto.getCategory(), bookDto.getDescription());
-        addAuthors(book, bookDto.getAuthorsIds());
-        return book;
     }
 }

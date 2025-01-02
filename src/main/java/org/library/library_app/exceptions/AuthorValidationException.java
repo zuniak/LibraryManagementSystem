@@ -9,13 +9,9 @@ import java.util.Set;
 @Getter
 public class AuthorValidationException extends RuntimeException {
 
-    private Set<ConstraintViolation<AuthorDto>> violations;
+    private final Set<ConstraintViolation<AuthorDto>> violations;
     public AuthorValidationException(String message, Set<ConstraintViolation<AuthorDto>> violations) {
         super(message);
         this.violations = violations;
-    }
-
-    public AuthorValidationException(String message) {
-        super(message);
     }
 }

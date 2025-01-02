@@ -8,12 +8,10 @@ import java.util.Set;
 
 @Getter
 public class BookValidationException extends RuntimeException {
-    private Set<ConstraintViolation<BookDto>> violations;
+    private final Set<ConstraintViolation<BookDto>> violations;
 
     public BookValidationException(String message, Set<ConstraintViolation<BookDto>> violations) {
         super(message);
         this.violations = violations;
     }
-
-    public BookValidationException(String message) {super(message);}
 }

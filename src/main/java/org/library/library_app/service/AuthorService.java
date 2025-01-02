@@ -5,6 +5,7 @@ import org.library.library_app.dto.AuthorDto;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
 import org.library.library_app.entity.Book;
+import org.library.library_app.exceptions.AuthorIdDoNotMatchException;
 import org.library.library_app.exceptions.AuthorNotFoundException;
 import org.library.library_app.exceptions.BookNotFoundException;
 import org.library.library_app.repository.AuthorRepository;
@@ -28,7 +29,7 @@ public class AuthorService {
     private final BookMapper bookMapper;
 
     public AuthorDto addAuthor(AuthorDto authorDto) {
-        Author author = toEntity(authorDto);
+        Author author = authorMapper.authorFromDto(authorDto);
         return authorMapper.authorToDto(authorRepository.saveAndFlush(author));
     }
 
@@ -68,8 +69,10 @@ public class AuthorService {
         Optional<Author> authorOpt = authorRepository.findById(id);
         if (authorOpt.isPresent()) {
             Author author = authorOpt.get();
-            author.setFirstName(updatedAuthor.getFirstName());
-            author.setLastName(updatedAuthor.getLastName());
+            if (!updatedAuthor.getId().equals(id)) {
+                throw new AuthorIdDoNotMatchException("Author id does not match");
+            }
+            authorMapper.updateAuthorFromDto(author, updatedAuthor);
             updateAuthorBooks(author, updatedAuthor.getBooksIds());
             authorRepository.save(author);
         } else {
@@ -113,9 +116,5 @@ public class AuthorService {
                 throw new BookNotFoundException("Book with id " + bookId + " not found");
             }
         }
-    }
-
-    public Author toEntity(AuthorDto authorDto) {
-        return new Author(authorDto.getFirstName(), authorDto.getLastName());
     }
 }

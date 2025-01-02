@@ -33,6 +33,7 @@ public class BookDto {
     @NotBlank(groups = {CreateBook.class, UpdateBook.class}, message = "Description cannot be blank.")
     private String description;
 
+    @Null(groups = {CreateBook.class}, message = "Status must be null when creating a new book.")
     @NotNull(groups = {UpdateBook.class}, message = "Status is required when updating a book.")
     private BookStatus status;
 }
