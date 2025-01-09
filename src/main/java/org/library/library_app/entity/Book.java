@@ -35,6 +35,10 @@ public class Book {
     @NotBlank
     private String description;
 
+    private String seriesName;
+
+    private Integer seriesNumber;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     private BookStatus status;

@@ -26,8 +26,24 @@ public class BookMother {
         return book;
     }
 
+    public static Book createBook(Long bookId, List<Author> authors, String seriesName, Integer seriesNumber) {
+        Book book = new Book(TITLE, CATEGORY, DESCRIPTION);
+        book.setId(bookId);
+        for (Author author : authors) {
+            book.addAuthor(author);
+            author.addBook(book);
+        }
+        book.setSeriesName(seriesName);
+        book.setSeriesNumber(seriesNumber);
+        return book;
+    }
+
     public static BookDto createDto(Long bookId, List<Long> authorsIds) {
         return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, STATUS);
+    }
+
+    public static BookDto createDto(Long bookId, List<Long> authorsIds, String seriesName, Integer seriesNumber) {
+        return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, seriesName, seriesNumber, STATUS);
     }
 
     public static BookDto createDtoValidCreateBook(List<Long> authorsIds) {

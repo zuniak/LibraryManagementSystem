@@ -37,11 +37,38 @@ public class BookController {
 
     @GetMapping
     public ResponseEntity<List<BookDto>> getAllBooks() {
-        List<BookDto> booksData = service.getAllBooksDto();
-        if (booksData.isEmpty()) {
+        List<BookDto> booksDto = service.getAllBooksDto();
+        if (booksDto.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(booksData);
+        return ResponseEntity.ok(booksDto);
+    }
+
+    @GetMapping("/series")
+    public ResponseEntity<List<BookDto>> getBooksThatArePartOfSeries() {
+        List<BookDto> booksDto = service.getBooksDtoThatArePartOfSeries();
+        if (booksDto.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(booksDto);
+    }
+
+    @GetMapping("/series/{seriesName}")
+    public ResponseEntity<List<BookDto>> getBooksBySeriesName(@PathVariable String seriesName) {
+        List<BookDto> booksDto = service.getBooksDtoBySeriesName(seriesName);
+        if (booksDto.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(booksDto);
+    }
+
+    @GetMapping("/series/{seriesName}/{seriesNumber}")
+    public ResponseEntity<List<BookDto>> getBooksBySeriesNameAndNumber(@PathVariable String seriesName, @PathVariable Integer seriesNumber) {
+        List<BookDto> booksDto = service.getBooksBySeriesNameAndNumber(seriesName, seriesNumber);
+        if (booksDto.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(booksDto);
     }
 
     @GetMapping("/{id}")
@@ -51,6 +78,15 @@ public class BookController {
             return ResponseEntity.ok(book.get());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/title/{title}")
+    public ResponseEntity<List<BookDto>> getBooksByTitle(@PathVariable String title) {
+        List<BookDto> bookDto = service.getBooksDtoByTitle(title);
+        if (bookDto.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(bookDto);
     }
 
     @DeleteMapping("/{id}")

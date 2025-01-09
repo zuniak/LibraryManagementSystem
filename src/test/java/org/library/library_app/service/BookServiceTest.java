@@ -121,6 +121,93 @@ class BookServiceTest {
     }
 
     @Test
+    void getBooksDtoThatArePartOfSeries_WhenNoBookFound_ShouldReturnEmptyList() {
+        when(bookRepository.findBySeriesNameNotNull()).thenReturn(List.of());
+
+        List<BookDto> result = service.getBooksDtoThatArePartOfSeries();
+
+        assertEquals(List.of(), result);
+
+        verify(bookRepository, times(1)).findBySeriesNameNotNull();
+        verify(bookMapper, never()).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksDtoThatArePartOfSeries_WhenBooksFound_ShouldReturnListOfBooks() {
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author), "Series", 1);
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L), "Series", 1);
+
+        when(bookRepository.findBySeriesNameNotNull()).thenReturn(List.of(book));
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
+
+        List<BookDto> result = service.getBooksDtoThatArePartOfSeries();
+
+        assertEquals(List.of(bookDto), result);
+
+        verify(bookRepository, times(1)).findBySeriesNameNotNull();
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksDtoBySeriesName_WhenNoBookFound_ShouldReturnEmptyList() {
+        when(bookRepository.findBySeriesName("Series")).thenReturn(List.of());
+
+        List<BookDto> result = service.getBooksDtoBySeriesName("Series");
+
+        assertEquals(List.of(), result);
+
+        verify(bookRepository, times(1)).findBySeriesName("Series");
+        verify(bookMapper, never()).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksDtoBySeriesName_WhenBooksFound_ShouldReturnListOfBooks() {
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author), "Series", 1);
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L), "Series", 1);
+
+        when(bookRepository.findBySeriesName("Series")).thenReturn(List.of(book));
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
+
+        List<BookDto> result = service.getBooksDtoBySeriesName("Series");
+
+        assertEquals(List.of(bookDto), result);
+
+        verify(bookRepository, times(1)).findBySeriesName("Series");
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksBySeriesNameAndNumber_WhenNoBookFound_ShouldReturnEmptyList() {
+        when(bookRepository.findBySeriesNameAndSeriesNumber("Series", 1)).thenReturn(List.of());
+
+        List<BookDto> result = service.getBooksBySeriesNameAndNumber("Series", 1);
+
+        assertEquals(List.of(), result);
+
+        verify(bookRepository, times(1)).findBySeriesNameAndSeriesNumber("Series", 1);
+        verify(bookMapper, never()).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksBySeriesNameAndNumber_WhenBooksFound_ShouldReturnListOfBooks() {
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author), "Series", 1);
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L), "Series", 1);
+
+        when(bookRepository.findBySeriesNameAndSeriesNumber("Series", 1)).thenReturn(List.of(book));
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
+
+        List<BookDto> result = service.getBooksBySeriesNameAndNumber("Series", 1);
+
+        assertEquals(List.of(bookDto), result);
+
+        verify(bookRepository, times(1)).findBySeriesNameAndSeriesNumber("Series", 1);
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
+    }
+
+    @Test
     void getBookDto_WhenBookFound_ShouldReturnBookDto() {
         Author author = AuthorMother.createAuthor(1L);
         Book book = BookMother.createBook(1L, List.of(author));
@@ -148,6 +235,35 @@ class BookServiceTest {
 
         verify(bookRepository, times(1)).findById(anyLong());
         verify(bookMapper, never()).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksDtoByTitle_WhenNoBookFound_ShouldReturnEmptyList() {
+        when(bookRepository.findByTitle("Title")).thenReturn(List.of());
+
+        List<BookDto> result = service.getBooksDtoByTitle("Title");
+
+        assertEquals(List.of(), result);
+
+        verify(bookRepository, times(1)).findByTitle("Title");
+        verify(bookMapper, never()).bookToDto(any(Book.class));
+    }
+
+    @Test
+    void getBooksDtoByTitle_WhenBooksFound_ShouldReturnListOfBooks() {
+        Author author = AuthorMother.createAuthor(1L);
+        Book book = BookMother.createBook(1L, List.of(author));
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(bookRepository.findByTitle("Title")).thenReturn(List.of(book));
+        when(bookMapper.bookToDto(book)).thenReturn(bookDto);
+
+        List<BookDto> result = service.getBooksDtoByTitle("Title");
+
+        assertEquals(List.of(bookDto), result);
+
+        verify(bookRepository, times(1)).findByTitle("Title");
+        verify(bookMapper, times(1)).bookToDto(any(Book.class));
     }
 
     @Test

@@ -123,6 +123,81 @@ class BookControllerTest {
     }
 
     @Test
+    void getBooksThatArePartOfSeries_WhenNoBooksFound_ShouldReturnNoContent() {
+        when(service.getBooksDtoThatArePartOfSeries()).thenReturn(List.of());
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksThatArePartOfSeries();
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(service, times(1)).getBooksDtoThatArePartOfSeries();
+    }
+
+    @Test
+    void getBooksThatArePartOfSeries_WhenBooksFound_ShouldReturnOk() {
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(service.getBooksDtoThatArePartOfSeries()).thenReturn(List.of(bookDto));
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksThatArePartOfSeries();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(bookDto), response.getBody());
+
+        verify(service, times(1)).getBooksDtoThatArePartOfSeries();
+    }
+
+    @Test
+    void getBooksBySeriesName_WhenNoBooksFound_ShouldReturnNoContent() {
+        when(service.getBooksDtoBySeriesName("seriesName")).thenReturn(List.of());
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksBySeriesName("seriesName");
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(service, times(1)).getBooksDtoBySeriesName("seriesName");
+    }
+
+    @Test
+    void getBooksBySeriesName_WhenBooksFound_ShouldReturnOk() {
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(service.getBooksDtoBySeriesName("seriesName")).thenReturn(List.of(bookDto));
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksBySeriesName("seriesName");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(bookDto), response.getBody());
+
+        verify(service, times(1)).getBooksDtoBySeriesName("seriesName");
+    }
+
+    @Test
+    void getBooksBySeriesNameAndNumber_WhenNoBooksFound_ShouldReturnNoContent() {
+        when(service.getBooksBySeriesNameAndNumber("seriesName", 1)).thenReturn(List.of());
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksBySeriesNameAndNumber("seriesName", 1);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(service, times(1)).getBooksBySeriesNameAndNumber("seriesName", 1);
+    }
+
+    @Test
+    void getBooksBySeriesNameAndNumber_WhenBooksFound_ShouldReturnOk() {
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(service.getBooksBySeriesNameAndNumber("seriesName", 1)).thenReturn(List.of(bookDto));
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksBySeriesNameAndNumber("seriesName", 1);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(bookDto), response.getBody());
+
+        verify(service, times(1)).getBooksBySeriesNameAndNumber("seriesName", 1);
+    }
+
+    @Test
     void getBook_WhenBookFound_ShouldReturnOk() {
         BookDto bookDto = BookMother.createDto(1L, List.of(1L));
 
@@ -145,6 +220,31 @@ class BookControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 
         verify(service, times(1)).getBookDto(anyLong());
+    }
+
+    @Test
+    void getBooksByTitle_WhenNoBooksFound_ShouldReturnNoContent() {
+        when(service.getBooksDtoByTitle("title")).thenReturn(List.of());
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksByTitle("title");
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(service, times(1)).getBooksDtoByTitle("title");
+    }
+
+    @Test
+    void getBooksByTitle_WhenBooksFound_ShouldReturnOk() {
+        BookDto bookDto = BookMother.createDto(1L, List.of(1L));
+
+        when(service.getBooksDtoByTitle("title")).thenReturn(List.of(bookDto));
+
+        ResponseEntity<List<BookDto>> response = controller.getBooksByTitle("title");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(bookDto), response.getBody());
+
+        verify(service, times(1)).getBooksDtoByTitle("title");
     }
 
     @Test

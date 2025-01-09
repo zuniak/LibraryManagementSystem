@@ -39,8 +39,36 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
+    public List<BookDto> getBooksDtoThatArePartOfSeries() {
+        return bookRepository.findBySeriesNameNotNull()
+                .stream()
+                .map(bookMapper::bookToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<BookDto> getBooksDtoBySeriesName(String seriesName) {
+        return bookRepository.findBySeriesName(seriesName)
+                .stream()
+                .map(bookMapper::bookToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<BookDto> getBooksBySeriesNameAndNumber(String seriesName, Integer seriesNumber) {
+        return bookRepository.findBySeriesNameAndSeriesNumber(seriesName, seriesNumber)
+                .stream()
+                .map(bookMapper::bookToDto)
+                .collect(Collectors.toList());
+    }
+
     public Optional<BookDto> getBookDto(Long id) {
         return bookRepository.findById(id).map(bookMapper::bookToDto);
+    }
+
+    public List<BookDto> getBooksDtoByTitle(String title) {
+        return bookRepository.findByTitle(title)
+                .stream()
+                .map(bookMapper::bookToDto)
+                .collect(Collectors.toList());
     }
 
     public void deleteBook(Long id) {
