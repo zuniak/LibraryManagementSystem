@@ -53,7 +53,7 @@ public class AuthorController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("{id}/books")
+    @GetMapping("/{id}/books")
     public ResponseEntity<List<BookDto>> getAuthorBooks(@PathVariable Long id) {
         List<BookDto> authorsBooks = service.getAuthorBooksDto(id);
         if (authorsBooks.isEmpty()) {

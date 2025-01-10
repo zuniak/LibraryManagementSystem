@@ -39,7 +39,7 @@ public class BookMother {
     }
 
     public static BookDto createDto(Long bookId, List<Long> authorsIds) {
-        return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, STATUS);
+        return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, null, null, STATUS);
     }
 
     public static BookDto createDto(Long bookId, List<Long> authorsIds, String seriesName, Integer seriesNumber) {
@@ -47,18 +47,18 @@ public class BookMother {
     }
 
     public static BookDto createDtoValidCreateBook(List<Long> authorsIds) {
-        return new BookDto(null, TITLE, authorsIds, CATEGORY, DESCRIPTION, null);
+        return new BookDto(null, TITLE, authorsIds, CATEGORY, DESCRIPTION, null, null, null);
     }
 
     public static BookDto createDtoInvalidCreateBook() {
-        return new BookDto(1L, "", List.of(), null, "", STATUS);
+        return new BookDto(1L, "", List.of(), null, "", null, null, STATUS);
     }
 
     public static BookDto createDtoValidUpdateBook(Long bookId, List<Long> authorsIds) {
-        return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, STATUS);
+        return new BookDto(bookId, TITLE, authorsIds, CATEGORY, DESCRIPTION, null, null, STATUS);
     }
 
     public static BookDto createDtoInvalidUpdateBook() {
-        return new BookDto( null, "", List.of(), null, "", null);
+        return new BookDto( null, "", List.of(), null, "", null, null, null);
     }
 }

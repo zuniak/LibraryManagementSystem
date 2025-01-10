@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import org.library.library_app.tools.BookCategory;
 import org.library.library_app.tools.BookStatus;
@@ -40,13 +41,4 @@ public class BookDto {
     @Null(groups = {CreateBook.class}, message = "Status must be null when creating a new book.")
     @NotNull(groups = {UpdateBook.class}, message = "Status is required when updating a book.")
     private BookStatus status;
-
-    public BookDto(Long id, String title, List<Long> authorsIds, BookCategory category, String description, BookStatus status) {
-        this.id = id;
-        this.title = title;
-        this.authorsIds = authorsIds;
-        this.category = category;
-        this.description = description;
-        this.status = status;
-    }
 }

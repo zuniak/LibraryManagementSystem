@@ -1,6 +1,5 @@
 package org.library.library_app.service;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.library.library_app.dto.BookDto;
 import org.library.library_app.entity.Author;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-@Transactional
 public class BookService {
     private AuthorRepository authorRepository;
     private BookRepository bookRepository;

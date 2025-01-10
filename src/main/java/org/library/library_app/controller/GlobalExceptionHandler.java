@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -21,17 +22,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 
-    @ExceptionHandler(AuthorValidationException.class)
-    public ResponseEntity<String> handleAuthorValidationException(AuthorValidationException exception) {
-        String violationMessage = exception.getViolations().stream()
+    private static <T> String getResponseMessage(String baseMessage, Set<ConstraintViolation<T>> violations, String defaultMessage) {
+        String violationMessage = violations.stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining("\n"));
 
-        String baseMessage = exception.getMessage();
         String responseMessage;
 
         if (baseMessage.isEmpty() && violationMessage.isEmpty()) {
-            responseMessage = "Author validation failed";
+            responseMessage = defaultMessage;
         } else if (baseMessage.isEmpty()) {
             responseMessage = violationMessage;
         } else if (violationMessage.isEmpty()) {
@@ -39,28 +38,18 @@ public class GlobalExceptionHandler {
         } else {
             responseMessage = baseMessage + ":\n" + violationMessage;
         }
+        return responseMessage;
+    }
 
+    @ExceptionHandler(AuthorValidationException.class)
+    public ResponseEntity<String> handleAuthorValidationException(AuthorValidationException exception) {
+        String responseMessage = getResponseMessage(exception.getMessage(), exception.getViolations(), "Author validation failed");
         return ResponseEntity.badRequest().body(responseMessage);
     }
 
     @ExceptionHandler(BookValidationException.class)
     public ResponseEntity<String> handleBookValidationException(BookValidationException exception) {
-        String violationMessage = exception.getViolations().stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining("\n"));
-
-        String baseMessage = exception.getMessage();
-        String responseMessage;
-
-        if (baseMessage.isEmpty() && violationMessage.isEmpty()) {
-            responseMessage = "Book validation failed";
-        } else if (baseMessage.isEmpty()) {
-            responseMessage = violationMessage;
-        } else if (violationMessage.isEmpty()) {
-            responseMessage = baseMessage;
-        } else {
-            responseMessage = baseMessage + ":\n" + violationMessage;
-        }
+        String responseMessage = getResponseMessage(exception.getMessage(), exception.getViolations(), "Book validation failed");
 
         return ResponseEntity.badRequest().body(responseMessage);
     }
