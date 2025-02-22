@@ -73,4 +73,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleBookIdDoNotMatchException(BookIdDoNotMatchException exception) {
         return ResponseEntity.badRequest().body(exception.getMessage());
     }
+
+    @ExceptionHandler(UserValidationException.class)
+    public ResponseEntity<String> handleUserValidationException(UserValidationException exception) {
+        String responseMessage = getResponseMessage(exception.getMessage(), exception.getViolations(), "User validation failed");
+        return ResponseEntity.badRequest().body(responseMessage);
+    }
 }
