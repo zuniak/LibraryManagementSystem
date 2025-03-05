@@ -3,24 +3,22 @@ package org.library.library_app.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.library.library_app.tools.UserType;
+import org.library.library_app.tools.LibraryUserType;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private UserType userType;
+@Data
+public class LibraryUser implements UserDetails {
+    @NotEmpty
+    private Set<LibraryUserType> authorities;
 
     @NotBlank
     private String firstName;
@@ -30,6 +28,10 @@ public class User {
 
     @Email(regexp = "^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
     private String email;
+
+    @Id
+    @NotBlank
+    private String username;
 
     @NotBlank // TODO: different validation
     private String phoneNumber;
