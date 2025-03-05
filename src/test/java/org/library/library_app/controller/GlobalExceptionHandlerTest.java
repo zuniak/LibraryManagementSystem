@@ -7,6 +7,7 @@ import org.library.library_app.dto.BookDto;
 import org.library.library_app.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Set;
 
@@ -204,6 +205,27 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<String> response = globalExceptionHandler.handleBookIdDoNotMatchException(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleUserValidationException(){
+        UserValidationException exception = new UserValidationException("User validation failed", Set.of());
+
+        ResponseEntity<String> response = globalExceptionHandler.handleUserValidationException(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("User validation failed", response.getBody());
+    }
+
+    @Test
+    public void handleUsernameNotFoundException(){
+        String message = "Username not found";
+        UsernameNotFoundException exception = new UsernameNotFoundException(message);
+
+        ResponseEntity<String> response = globalExceptionHandler.handleUsernameNotFoundException(exception);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals(message, response.getBody());
     }
 }

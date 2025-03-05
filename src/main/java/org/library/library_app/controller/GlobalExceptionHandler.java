@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import org.library.library_app.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -78,5 +79,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleUserValidationException(UserValidationException exception) {
         String responseMessage = getResponseMessage(exception.getMessage(), exception.getViolations(), "LibraryUser validation failed");
         return ResponseEntity.badRequest().body(responseMessage);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 }

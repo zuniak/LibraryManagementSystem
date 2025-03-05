@@ -31,7 +31,7 @@ public class LibraryUserController {
     public ResponseEntity<LibraryUserDto> addEmployee(@RequestBody @Valid LibraryUserDto user) {
         Set<ConstraintViolation<LibraryUserDto>> violations = validator.validate(user, CreateUser.class);
         if (!violations.isEmpty()) {
-            throw new UserValidationException("LibraryUser create validation failed", violations);
+            throw new UserValidationException("Employee create validation failed", violations);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(service.addUser(user, Set.of(LibraryUserType.EMPLOYEE)));
     }

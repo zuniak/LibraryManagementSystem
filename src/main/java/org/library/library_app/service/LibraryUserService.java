@@ -19,40 +19,40 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class LibraryUserService implements UserDetailsService {
-    private final LibraryUserRepository libraryUserRepository;
-    private final LibraryUserMapper libraryUserMapper;
+    private final LibraryUserRepository repository;
+    private final LibraryUserMapper mapper;
 
     public LibraryUserDto addUser(LibraryUserDto libraryUserDto, Set<LibraryUserType> authorities) {
-        LibraryUser user = libraryUserMapper.userFromDto(libraryUserDto);
+        LibraryUser user = mapper.userFromDto(libraryUserDto);
         user.setAuthorities(authorities);
-        return libraryUserMapper.userToDtoWithoutPassword(libraryUserRepository.saveAndFlush(user));
+        return mapper.userToDtoWithoutPassword(repository.saveAndFlush(user));
     }
 
     public List<LibraryUserDto> getAllUsersDto() {
-        return libraryUserRepository.findAll()
+        return repository.findAll()
                 .stream()
-                .map(libraryUserMapper::userToDtoWithoutPassword)
+                .map(mapper::userToDtoWithoutPassword)
                 .collect(Collectors.toList());
     }
 
     public List<LibraryUserDto> getAllUsersByType(LibraryUserType libraryUserType) {
-        return libraryUserRepository.findAll().stream()
+        return repository.findAll().stream()
                 .filter(user -> user.getAuthorities().contains(libraryUserType))
-                .map(libraryUserMapper::userToDtoWithoutPassword)
+                .map(mapper::userToDtoWithoutPassword)
                 .collect(Collectors.toList());
     }
 
     public LibraryUserDto getUserDtoByUsername(String username) {
-        Optional<LibraryUser> user = libraryUserRepository.findById(username);
+        Optional<LibraryUser> user = repository.findById(username);
         if (user.isEmpty()){
             throw new UsernameNotFoundException("LibraryUser not found");
         }
-        return libraryUserMapper.userToDtoWithoutPassword(user.get());
+        return mapper.userToDtoWithoutPassword(user.get());
     }
 
     @Override
     public UserDetails loadUserByUsername(String username){
-        Optional<LibraryUser> user = libraryUserRepository.findById(username);
+        Optional<LibraryUser> user = repository.findById(username);
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("LibraryUser not found");
         }

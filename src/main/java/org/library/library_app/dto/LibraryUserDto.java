@@ -2,14 +2,14 @@ package org.library.library_app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.library.library_app.validationgroups.CreateUser;
 import org.library.library_app.validationgroups.UpdateUser;
 
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
 public class LibraryUserDto {
     @NotBlank(groups = {CreateUser.class, UpdateUser.class}, message = "First name cannot be blank.")
     private String firstName;
