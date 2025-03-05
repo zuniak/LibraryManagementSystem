@@ -59,10 +59,9 @@ class LibraryUserServiceTest {
         when(repository.saveAndFlush(member)).thenReturn(member);
         when(mapper.userToDtoWithoutPassword(member)).thenReturn(savedUserDto);
 
-        LibraryUserDto result = service.addUser(memberDto, authorities);
+        service.addUser(memberDto, authorities);
 
         assertEquals(authorities, member.getAuthorities());
-        assertEquals(savedUserDto, result);
 
         verify(mapper, times(1)).userFromDto(memberDto);
         verify(repository, times(1)).saveAndFlush(member);

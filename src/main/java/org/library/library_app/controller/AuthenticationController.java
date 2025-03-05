@@ -30,14 +30,15 @@ public class AuthenticationController {
     private final Validator validator;
 
     @PostMapping("/register")
-    public ResponseEntity<LibraryUserDto> registerMember(@RequestBody LibraryUserDto libraryUserDto) {
+    public ResponseEntity<String> registerMember(@RequestBody LibraryUserDto libraryUserDto) {
         libraryUserDto.setPassword(passwordEncoder.encode(libraryUserDto.getPassword()));
 
         Set<ConstraintViolation<LibraryUserDto>> violations = validator.validate(libraryUserDto, CreateUser.class);
         if (!violations.isEmpty()) {
-            throw new UserValidationException("LibraryUser registration failed", violations);
+            throw new UserValidationException("Library member registration failed", violations);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.addUser(libraryUserDto, Set.of(LibraryUserType.MEMBER)));
+        userService.addUser(libraryUserDto, Set.of(LibraryUserType.MEMBER));
+        return ResponseEntity.status(HttpStatus.CREATED).body("Library member " + libraryUserDto.getUsername() + " registered successfully.");
     }
 
     @PostMapping("/login")
@@ -46,7 +47,7 @@ public class AuthenticationController {
                 new UsernamePasswordAuthenticationToken(username, password));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return ResponseEntity.ok("LibraryUser " + username + " logged in");
+        return ResponseEntity.ok("Library user " + username + " logged in.");
     }
 }
 

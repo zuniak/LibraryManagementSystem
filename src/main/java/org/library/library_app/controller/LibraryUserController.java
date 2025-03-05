@@ -28,12 +28,13 @@ public class LibraryUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/new")
-    public ResponseEntity<LibraryUserDto> addEmployee(@RequestBody @Valid LibraryUserDto user) {
+    public ResponseEntity<String> addEmployee(@RequestBody @Valid LibraryUserDto user) {
         Set<ConstraintViolation<LibraryUserDto>> violations = validator.validate(user, CreateUser.class);
         if (!violations.isEmpty()) {
             throw new UserValidationException("Employee create validation failed", violations);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.addUser(user, Set.of(LibraryUserType.EMPLOYEE)));
+        service.addUser(user, Set.of(LibraryUserType.EMPLOYEE));
+        return ResponseEntity.status(HttpStatus.CREATED).body("Employee " + user.getUsername() + " created");
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")

@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         } else if (baseMessage.isEmpty()) {
             responseMessage = violationMessage;
         } else if (violationMessage.isEmpty()) {
-            responseMessage = baseMessage;
+            responseMessage = baseMessage + ".";
         } else {
             responseMessage = baseMessage + ":\n" + violationMessage;
         }
@@ -84,5 +84,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(UsernameIsTakenException.class)
+    public ResponseEntity<String> handleUsernameIsTakenException(UsernameIsTakenException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
     }
 }

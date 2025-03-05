@@ -3,6 +3,7 @@ package org.library.library_app.service;
 import lombok.AllArgsConstructor;
 import org.library.library_app.dto.LibraryUserDto;
 import org.library.library_app.entity.LibraryUser;
+import org.library.library_app.exceptions.UsernameIsTakenException;
 import org.library.library_app.repository.LibraryUserRepository;
 import org.library.library_app.tools.LibraryUserMapper;
 import org.library.library_app.tools.LibraryUserType;
@@ -22,10 +23,13 @@ public class LibraryUserService implements UserDetailsService {
     private final LibraryUserRepository repository;
     private final LibraryUserMapper mapper;
 
-    public LibraryUserDto addUser(LibraryUserDto libraryUserDto, Set<LibraryUserType> authorities) {
-        LibraryUser user = mapper.userFromDto(libraryUserDto);
+    public void addUser(LibraryUserDto userDto, Set<LibraryUserType> authorities) {
+        if (repository.existsById(userDto.getUsername())) {
+            throw new UsernameIsTakenException("Library user " + userDto.getUsername() + " already exists");
+        }
+        LibraryUser user = mapper.userFromDto(userDto);
         user.setAuthorities(authorities);
-        return mapper.userToDtoWithoutPassword(repository.saveAndFlush(user));
+        repository.saveAndFlush(user);
     }
 
     public List<LibraryUserDto> getAllUsersDto() {
