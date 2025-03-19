@@ -16,7 +16,9 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 public class LibraryUser implements UserDetails {
-    @NotEmpty
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable()
+    @Enumerated(EnumType.STRING)
     private Set<LibraryUserType> authorities;
 
     @NotBlank

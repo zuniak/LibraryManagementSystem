@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         } else if (baseMessage.isEmpty()) {
             responseMessage = violationMessage;
         } else if (violationMessage.isEmpty()) {
-            responseMessage = baseMessage + ".";
+            responseMessage = baseMessage;
         } else {
             responseMessage = baseMessage + ":\n" + violationMessage;
         }

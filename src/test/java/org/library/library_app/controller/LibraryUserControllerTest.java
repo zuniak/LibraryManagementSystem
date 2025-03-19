@@ -48,12 +48,12 @@ class LibraryUserControllerTest {
 
     @Test
     void addEmployee_whenValidEmployee_thenReturnsCreated() {
-        memberDto.setUsername("username");
+        employeeDto.setUsername("username");
         when(validator.validate(employeeDto, CreateUser.class)).thenReturn(Set.of());
 
-        ResponseEntity<String> response = controller.addEmployee(memberDto);
+        ResponseEntity<String> response = controller.addEmployee(employeeDto);
 
-        assertEquals("Employee " + memberDto.getUsername() + " created", response.getBody());
+        assertEquals("Employee " + employeeDto.getUsername() + " created", response.getBody());
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
         verify(validator, times(1)).validate(employeeDto, CreateUser.class);

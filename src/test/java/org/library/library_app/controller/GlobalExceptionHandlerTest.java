@@ -71,7 +71,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleAuthorValidationException_WhenMessageNotEmptyAndNoViolations() {
-        String message = "Author validation failed";
+        String message = "Author validation failed.";
         AuthorValidationException authorValidationException = new AuthorValidationException(message, Set.of());
 
         ResponseEntity<String> response = globalExceptionHandler.handleAuthorValidationException(authorValidationException);
@@ -132,7 +132,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleBookValidationException_WhenMessageNotEmptyAndNoViolations() {
-        String message = "Book validation failed";
+        String message = "Book validation failed.";
         BookValidationException bookValidationException = new BookValidationException(message, Set.of());
 
         ResponseEntity<String> response = globalExceptionHandler.handleBookValidationException(bookValidationException);
@@ -210,12 +210,12 @@ class GlobalExceptionHandlerTest {
 
     @Test
     public void handleUserValidationException(){
-        UserValidationException exception = new UserValidationException("User validation failed", Set.of());
+        UserValidationException exception = new UserValidationException("User validation failed.", Set.of());
 
         ResponseEntity<String> response = globalExceptionHandler.handleUserValidationException(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("User validation failed", response.getBody());
+        assertEquals("User validation failed.", response.getBody());
     }
 
     @Test

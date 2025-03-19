@@ -57,15 +57,12 @@ class LibraryUserServiceTest {
 
         when(mapper.userFromDto(memberDto)).thenReturn(member);
         when(repository.saveAndFlush(member)).thenReturn(member);
-        when(mapper.userToDtoWithoutPassword(member)).thenReturn(savedUserDto);
-
         service.addUser(memberDto, authorities);
 
         assertEquals(authorities, member.getAuthorities());
 
         verify(mapper, times(1)).userFromDto(memberDto);
         verify(repository, times(1)).saveAndFlush(member);
-        verify(mapper, times(1)).userToDtoWithoutPassword(member);
     }
 
     @Test
@@ -87,14 +84,14 @@ class LibraryUserServiceTest {
         member.setAuthorities(Set.of(LibraryUserType.MEMBER));
         employee.setAuthorities(Set.of(LibraryUserType.EMPLOYEE));
 
-        when(repository.findAll()).thenReturn(List.of(member, employee));
+        when(repository.findByAuthoritiesContaining(LibraryUserType.MEMBER)).thenReturn(List.of(member));
         when(mapper.userToDtoWithoutPassword(member)).thenReturn(memberDto);
 
         List<LibraryUserDto> result = service.getAllUsersByType(LibraryUserType.MEMBER);
 
         assertEquals(List.of(memberDto), result);
 
-        verify(repository, times(1)).findAll();
+        verify(repository, times(1)).findByAuthoritiesContaining(LibraryUserType.MEMBER);
         verify(mapper, times(1)).userToDtoWithoutPassword(member);
     }
 

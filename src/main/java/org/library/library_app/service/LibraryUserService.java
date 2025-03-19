@@ -40,8 +40,8 @@ public class LibraryUserService implements UserDetailsService {
     }
 
     public List<LibraryUserDto> getAllUsersByType(LibraryUserType libraryUserType) {
-        return repository.findAll().stream()
-                .filter(user -> user.getAuthorities().contains(libraryUserType))
+        return repository.findByAuthoritiesContaining(libraryUserType)
+                .stream()
                 .map(mapper::userToDtoWithoutPassword)
                 .collect(Collectors.toList());
     }
