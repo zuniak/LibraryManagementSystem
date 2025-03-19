@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.library.library_app.tools.LibraryUserType;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -39,4 +40,10 @@ public class LibraryUser implements UserDetails {
 
     @NotBlank // TODO: security
     private String password;
+
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    private List<BookLoan> loans;
+
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    private List<BookReservation> reservations;
 }
