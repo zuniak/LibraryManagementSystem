@@ -9,6 +9,7 @@ import org.library.library_app.tools.LibraryUserType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthenticationControllerIntegrationTest {
     @Autowired
     private WebApplicationContext context;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     static MockMvc mvc;
 
@@ -54,7 +58,7 @@ public class AuthenticationControllerIntegrationTest {
         user.setEmail("email@email.com");
         user.setUsername("username");
         user.setPhoneNumber("123456789");
-        user.setPassword("password"); // TODO: hash password
+        user.setPassword(passwordEncoder.encode("password"));
 
         repository.save(user);
     }
@@ -122,5 +126,24 @@ public class AuthenticationControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(expectedMessage));
         assertFalse(repository.existsById("username1"));
+    }
+
+    @Test
+    public void login_whenValidUsernameAndPassword_shouldReturnOk() throws Exception {
+        String expectedMessage = "Library user username logged in.";
+
+        mvc.perform(post("/auth/login")
+                .param("username", "username")
+                .param("password", "password"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(expectedMessage));
+    }
+
+    @Test
+    void login_whenInvalidPassword_shouldReturnUnauthorized() throws Exception {
+        mvc.perform(post("/auth/login")
+                        .param("username", "username")
+                        .param("password", "wrongPassword"))
+                .andExpect(status().isUnauthorized());
     }
 }

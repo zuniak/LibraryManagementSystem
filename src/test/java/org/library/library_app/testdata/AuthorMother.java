@@ -18,6 +18,10 @@ public class AuthorMother {
         return author;
     }
 
+    public static Author createAuthor() {
+        return new Author(FIRSTNAME, LASTNAME);
+    }
+
     public static AuthorDto createDto(Long authorId) {
         return new AuthorDto(authorId, FIRSTNAME, LASTNAME, new HashSet<>());
     }

@@ -21,8 +21,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleAuthorNotFoundException() {
-        String message = "Author not found";
-        AuthorNotFoundException exception = new AuthorNotFoundException(message);
+        String message = "Author with id 1 not found";
+        AuthorNotFoundException exception = new AuthorNotFoundException(1L);
 
         ResponseEntity<String> response = globalExceptionHandler.handleAuthorNotFoundException(exception);
 
@@ -32,8 +32,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleBookNotFoundException() {
-        String message = "Book not found";
-        BookNotFoundException exception = new BookNotFoundException(message);
+        String message = "Book with id 1 not found";
+        BookNotFoundException exception = new BookNotFoundException(1L);
 
         ResponseEntity<String> response = globalExceptionHandler.handleBookNotFoundException(exception);
 
@@ -165,8 +165,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleUnknownBookCategoryException() {
-        String message = "Unknown book category";
-        UnknownBookCategoryException unknownBookCategoryException = new UnknownBookCategoryException(message);
+        String message = "Unknown category: invalidCategory";
+        UnknownBookCategoryException unknownBookCategoryException = new UnknownBookCategoryException("invalidCategory");
 
         ResponseEntity<String> response = globalExceptionHandler.handleUnknownBookCategoryException(unknownBookCategoryException);
 
@@ -176,8 +176,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleUnknownBookStatusException() {
-        String message = "Unknown book status";
-        UnknownBookStatusException unknownBookStatusException = new UnknownBookStatusException(message);
+        String message = "Unknown book status: invalidStatus";
+        UnknownBookStatusException unknownBookStatusException = new UnknownBookStatusException("invalidStatus");
 
         ResponseEntity<String> response = globalExceptionHandler.handleUnknownBookStatusException(unknownBookStatusException);
 
@@ -188,8 +188,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     public void handleAuthorIdDoNotMatchException() {
-        String message = "Author id do not match";
-        AuthorIdDoNotMatchException exception = new AuthorIdDoNotMatchException(message);
+        String message = "Author id does not match";
+        AuthorIdDoNotMatchException exception = new AuthorIdDoNotMatchException();
 
         ResponseEntity<String> response = globalExceptionHandler.handleAuthorIdDoNotMatchException(exception);
 
@@ -199,8 +199,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     public void handleBookIdDoNotMatchException() {
-        String message = "Book id do not match";
-        BookIdDoNotMatchException exception = new BookIdDoNotMatchException(message);
+        String message = "Book id does not match";
+        BookIdDoNotMatchException exception = new BookIdDoNotMatchException();
 
         ResponseEntity<String> response = globalExceptionHandler.handleBookIdDoNotMatchException(exception);
 
@@ -226,6 +226,61 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<String> response = globalExceptionHandler.handleUsernameNotFoundException(exception);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleUsernameTakenException(){
+        String message = "Library user username already exists";
+        UsernameTakenException exception = new UsernameTakenException("username");
+
+        ResponseEntity<String> response = globalExceptionHandler.handleUsernameTakenException(exception);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleBookLimitExceededException(){
+        String message = "Book limit exceeded";
+        BookLimitExceededException exception = new BookLimitExceededException(message);
+
+        ResponseEntity<String> response = globalExceptionHandler.handleBookLimitExceededException(exception);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleDuplicateReservationException(){
+        String message = "User username already requested reservation for book with id 1";
+        DuplicateReservationException exception = new DuplicateReservationException("username", 1L);
+
+        ResponseEntity<String> response = globalExceptionHandler.handleDuplicateReservationException(exception);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleBookReservationNotFoundException(){
+        String message = "No reservation found for book with id 1";
+        BookReservationNotFoundException exception = new BookReservationNotFoundException(1L);
+
+        ResponseEntity<String> response = globalExceptionHandler.handleBookReservationNotFoundException(exception);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(message, response.getBody());
+    }
+
+    @Test
+    public void handleDueDateNotExtendedException(){
+        String message = "Due date exceeded";
+        DueDateNotExtendedException exception = new DueDateNotExtendedException(message);
+
+        ResponseEntity<String> response = globalExceptionHandler.handleDueDateNotExtendedException(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(message, response.getBody());
     }
 }

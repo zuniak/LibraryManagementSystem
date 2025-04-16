@@ -53,7 +53,7 @@ public class AuthorService {
                     .map(bookMapper::bookToDto)
                     .collect(Collectors.toList());
         }
-        throw new AuthorNotFoundException("Author with id " + authorId + " not found");
+        throw new AuthorNotFoundException(authorId);
     }
 
 
@@ -61,7 +61,7 @@ public class AuthorService {
         if (authorRepository.findById(id).isPresent()) {
             authorRepository.deleteById(id);
         } else {
-            throw new AuthorNotFoundException("Author with id " + id + " not found");
+            throw new AuthorNotFoundException(id);
         }
     }
 
@@ -70,13 +70,13 @@ public class AuthorService {
         if (authorOpt.isPresent()) {
             Author author = authorOpt.get();
             if (!updatedAuthor.getId().equals(id)) {
-                throw new AuthorIdDoNotMatchException("Author id does not match");
+                throw new AuthorIdDoNotMatchException();
             }
             authorMapper.updateAuthorFromDto(author, updatedAuthor);
             updateAuthorBooks(author, updatedAuthor.getBooksIds());
             authorRepository.save(author);
         } else {
-            throw new AuthorNotFoundException("Author with id " + id + " not found");
+            throw new AuthorNotFoundException(id);
         }
     }
 
@@ -113,7 +113,7 @@ public class AuthorService {
                 author.addBook(book);
                 book.addAuthor(author);
             } else {
-                throw new BookNotFoundException("Book with id " + bookId + " not found");
+                throw new BookNotFoundException(bookId);
             }
         }
     }

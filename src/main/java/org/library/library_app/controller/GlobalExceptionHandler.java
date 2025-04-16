@@ -86,8 +86,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 
-    @ExceptionHandler(UsernameIsTakenException.class)
-    public ResponseEntity<String> handleUsernameIsTakenException(UsernameIsTakenException exception) {
+    @ExceptionHandler(UsernameTakenException.class)
+    public ResponseEntity<String> handleUsernameTakenException(UsernameTakenException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(BookLimitExceededException.class)
+    public ResponseEntity<String> handleBookLimitExceededException(BookLimitExceededException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateReservationException.class)
+    public ResponseEntity<String> handleDuplicateReservationException(DuplicateReservationException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(BookReservationNotFoundException.class)
+    public ResponseEntity<String> handleBookReservationNotFoundException(BookReservationNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(DueDateNotExtendedException.class)
+    public ResponseEntity<String> handleDueDateNotExtendedException(DueDateNotExtendedException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 }

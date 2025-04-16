@@ -18,7 +18,7 @@ public enum BookCategory {
                 return bookCategory;
             }
         }
-        throw new UnknownBookCategoryException("Unknown category: " + category);
+        throw new UnknownBookCategoryException(category);
     }
 
     @Override

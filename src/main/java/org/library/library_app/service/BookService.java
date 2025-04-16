@@ -62,6 +62,14 @@ public class BookService {
         return bookRepository.findById(id).map(bookMapper::bookToDto);
     }
 
+    public Book getBook(Long id) {
+        Optional<Book> bookOpt = bookRepository.findById(id);
+        if (bookOpt.isEmpty()){
+            throw new BookNotFoundException(id);
+        }
+        return bookOpt.get();
+    }
+
     public List<BookDto> getBooksDtoByTitle(String title) {
         return bookRepository.findByTitle(title)
                 .stream()
@@ -77,7 +85,7 @@ public class BookService {
             }
             bookRepository.deleteById(id);
         } else {
-            throw new BookNotFoundException("Book with id " + id + " not found");
+            throw new BookNotFoundException(id);
         }
     }
 
@@ -86,7 +94,7 @@ public class BookService {
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
             if (!bookDto.getId().equals(id)) {
-                throw new BookIdDoNotMatchException("Book id does not match");
+                throw new BookIdDoNotMatchException();
             }
             bookMapper.updateBookFromDto(book, bookDto);
 
@@ -98,7 +106,7 @@ public class BookService {
 
             bookRepository.save(book);
         } else {
-            throw new BookNotFoundException("Book with id " + id + " not found");
+            throw new BookNotFoundException(id);
         }
     }
 
@@ -106,7 +114,7 @@ public class BookService {
         for (Long authorId : authorsIds) {
             Optional<Author> authorOpt = authorRepository.findById(authorId);
             if (authorOpt.isEmpty()) {
-                throw new AuthorNotFoundException("Author with id " + authorId + " not found");
+                throw new AuthorNotFoundException(authorId);
             }
             Author author = authorOpt.get();
             book.addAuthor(author);

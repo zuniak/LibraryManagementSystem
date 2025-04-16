@@ -159,7 +159,7 @@ class AuthorControllerTest {
 
     @Test
     void getAuthorBooks_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException() {
-        when(service.getAuthorBooksDto(1L)).thenThrow(new AuthorNotFoundException("Author with id 1 not found"));
+        when(service.getAuthorBooksDto(1L)).thenThrow(new AuthorNotFoundException(1L));
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> controller.getAuthorBooks(1L));
@@ -180,7 +180,7 @@ class AuthorControllerTest {
 
     @Test
     void deleteAuthor_WhenAuthorNotFound_ShouldThrowAuthorNotFoundException(){
-        doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).deleteAuthor(1L);
+        doThrow(new AuthorNotFoundException(1L)).when(service).deleteAuthor(1L);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> controller.deleteAuthor(1L));
@@ -209,7 +209,7 @@ class AuthorControllerTest {
         AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
 
         when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
-        doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).updateAuthor(1L, updatedAuthor);
+        doThrow(new AuthorNotFoundException(1L)).when(service).updateAuthor(1L, updatedAuthor);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> controller.updateAuthor(1L, updatedAuthor));
@@ -225,7 +225,7 @@ class AuthorControllerTest {
         AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
 
         when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
-        doThrow(new AuthorIdDoNotMatchException("Author id does not match")).when(service).updateAuthor(2L, updatedAuthor);
+        doThrow(new AuthorIdDoNotMatchException()).when(service).updateAuthor(2L, updatedAuthor);
 
         AuthorIdDoNotMatchException exception = assertThrows(AuthorIdDoNotMatchException.class,
                 () -> controller.updateAuthor(2L, updatedAuthor));
@@ -241,7 +241,7 @@ class AuthorControllerTest {
         AuthorDto updatedAuthor = AuthorMother.createDtoValidUpdateAuthor(1L, Set.of(1L));
 
         when(validator.validate(updatedAuthor, UpdateAuthor.class)).thenReturn(Set.of());
-        doThrow(new BookNotFoundException("Book with id 1 not found")).when(service).updateAuthor(1L, updatedAuthor);
+        doThrow(new BookNotFoundException(1L)).when(service).updateAuthor(1L, updatedAuthor);
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> controller.updateAuthor(1L, updatedAuthor));

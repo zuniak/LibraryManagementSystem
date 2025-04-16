@@ -26,6 +26,15 @@ public class BookMother {
         return book;
     }
 
+    public static Book createBook(List<Author> authors) {
+        Book book = new Book(TITLE, CATEGORY, DESCRIPTION);
+        for (Author author : authors) {
+            book.addAuthor(author);
+            author.addBook(book);
+        }
+        return book;
+    }
+
     public static Book createBook(Long bookId, List<Author> authors, String seriesName, Integer seriesNumber) {
         Book book = new Book(TITLE, CATEGORY, DESCRIPTION);
         book.setId(bookId);

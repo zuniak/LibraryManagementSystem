@@ -24,6 +24,6 @@ public enum BookStatus {
                 return bookStatus;
             }
         }
-        throw new UnknownBookStatusException("Unknown status: " + status);
+        throw new UnknownBookStatusException(status);
     }
 }

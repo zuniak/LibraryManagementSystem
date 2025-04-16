@@ -1,7 +1,7 @@
 package org.library.library_app.exceptions;
 
 public class UnknownBookStatusException extends RuntimeException {
-    public UnknownBookStatusException(String message) {
-        super(message);
+    public UnknownBookStatusException(String status) {
+        super("Unknown book status: " + status);
     }
 }

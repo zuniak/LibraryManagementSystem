@@ -84,7 +84,7 @@ class BookControllerTest {
         BookDto bookDto = BookMother.createDtoValidCreateBook(List.of(1L));
 
         when(validator.validate(bookDto, CreateBook.class)).thenReturn(Set.of());
-        when(service.addBook(bookDto)).thenThrow(new AuthorNotFoundException("Author with id 1 not found"));
+        when(service.addBook(bookDto)).thenThrow(new AuthorNotFoundException(1L));
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> controller.addBook(bookDto));
@@ -258,7 +258,7 @@ class BookControllerTest {
 
     @Test
     void deleteBook_WhenBookNotFound_ShouldThrownBookNotFoundRequest(){
-        doThrow(new BookNotFoundException("Book with id 1 not found")).when(service).deleteBook(1L);
+        doThrow(new BookNotFoundException(1L)).when(service).deleteBook(1L);
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> controller.deleteBook(1L));
@@ -306,7 +306,7 @@ class BookControllerTest {
 
         when(validator.validate(bookDto, UpdateBook.class)).thenReturn(Set.of());
 
-        doThrow(new BookNotFoundException("Book with id 1 not found")).when(service).updateBook(1L, bookDto);
+        doThrow(new BookNotFoundException(1L)).when(service).updateBook(1L, bookDto);
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> controller.updateBook(1L, bookDto));
@@ -323,7 +323,7 @@ class BookControllerTest {
 
         when(validator.validate(bookDto, UpdateBook.class)).thenReturn(Set.of());
 
-        doThrow(new AuthorNotFoundException("Author with id 1 not found")).when(service).updateBook(1L, bookDto);
+        doThrow(new AuthorNotFoundException(1L)).when(service).updateBook(1L, bookDto);
 
         AuthorNotFoundException exception = assertThrows(AuthorNotFoundException.class,
                 () -> controller.updateBook(1L, bookDto));
@@ -340,7 +340,7 @@ class BookControllerTest {
 
         when(validator.validate(bookDto, UpdateBook.class)).thenReturn(Set.of());
 
-        doThrow(new BookIdDoNotMatchException("Book id does not match")).when(service).updateBook(2L, bookDto);
+        doThrow(new BookIdDoNotMatchException()).when(service).updateBook(2L, bookDto);
 
         BookIdDoNotMatchException exception = assertThrows(BookIdDoNotMatchException.class,
                 () -> controller.updateBook(2L, bookDto));

@@ -3,7 +3,7 @@ package org.library.library_app.service;
 import lombok.AllArgsConstructor;
 import org.library.library_app.dto.LibraryUserDto;
 import org.library.library_app.entity.LibraryUser;
-import org.library.library_app.exceptions.UsernameIsTakenException;
+import org.library.library_app.exceptions.UsernameTakenException;
 import org.library.library_app.repository.LibraryUserRepository;
 import org.library.library_app.tools.LibraryUserMapper;
 import org.library.library_app.tools.LibraryUserType;
@@ -25,7 +25,7 @@ public class LibraryUserService implements UserDetailsService {
 
     public void addUser(LibraryUserDto userDto, Set<LibraryUserType> authorities) {
         if (repository.existsById(userDto.getUsername())) {
-            throw new UsernameIsTakenException("Library user " + userDto.getUsername() + " already exists");
+            throw new UsernameTakenException(userDto.getUsername());
         }
         LibraryUser user = mapper.userFromDto(userDto);
         user.setAuthorities(authorities);
@@ -52,6 +52,14 @@ public class LibraryUserService implements UserDetailsService {
             throw new UsernameNotFoundException("LibraryUser not found");
         }
         return mapper.userToDtoWithoutPassword(user.get());
+    }
+
+    public LibraryUser getUserByUsername(String username) {
+        Optional<LibraryUser> user = repository.findById(username);
+        if (user.isEmpty()){
+            throw new UsernameNotFoundException("LibraryUser not found");
+        }
+        return user.get();
     }
 
     @Override
